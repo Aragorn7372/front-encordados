@@ -1,12 +1,15 @@
-import { Component, signal } from '@angular/core';
+import { inject, ChangeDetectionStrategy, Component } from '@angular/core';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { ThemeService } from './core/theme/theme.service';
 
 @Component({
-  imports: [RouterOutlet],
   selector: 'app-root',
-  styleUrl: './app.css',
+  imports: [RouterOutlet, DatePipe, CurrencyPipe],
   templateUrl: './app.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  protected readonly title = signal('front-encordados');
+  protected readonly theme = inject(ThemeService);
+  protected readonly hoy = new Date();
 }
