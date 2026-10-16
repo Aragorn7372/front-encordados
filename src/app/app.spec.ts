@@ -4,7 +4,10 @@ import { provideSpanishLocale } from './core/config/i18n/provide-locale';
 
 describe('App', () => {
   beforeEach(async () => {
-    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: false })),
+    );
     localStorage.clear();
 
     await TestBed.configureTestingModule({

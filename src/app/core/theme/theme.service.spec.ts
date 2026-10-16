@@ -3,12 +3,15 @@ import { ThemeService } from './theme.service';
 
 describe('ThemeService', () => {
   const mockMatchMedia = (dark: boolean) =>
-    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: dark })));
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: dark })),
+    );
 
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-theme');
-    TestBed.resetTestingModule();     // servicio nuevo en cada test
+    TestBed.resetTestingModule(); // servicio nuevo en cada test
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -40,7 +43,7 @@ describe('ThemeService', () => {
     const service = TestBed.inject(ThemeService);
 
     service.toggle();
-    TestBed.tick();                   // ejecuta el effect pendiente
+    TestBed.tick(); // ejecuta el effect pendiente
 
     expect(service.theme()).toBe('black');
     expect(document.documentElement.getAttribute('data-theme')).toBe('black');
