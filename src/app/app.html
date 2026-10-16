@@ -1,10 +1,14 @@
 <main class="p-6 space-y-4 min-h-dvh bg-base-100 text-base-content">
   <p>{{ hoy | date: 'fullDate' }} · {{ 12.5 | currency: 'EUR' }}</p>
-
   <button class="btn btn-primary" (click)="theme.toggle()">Tema: {{ theme.theme() }}</button>
-
+  <button class="btn" (click)="toastService.success('¡Funciona!')">Probar toast</button>
+  <button class="btn" (click)="toastService.warning('¡Advertencia!')">
+    Probar toast de advertencia
+  </button>
+  <button class="btn" (click)="toastService.error('¡Error!')">Probar toast de error</button>
   <div class="card bg-base-200 p-4">Tarjeta en base-200</div>
   <span class="badge badge-success">Completado</span>
   <div class="alert alert-error">Esto es un error</div>
 </main>
 <router-outlet />
+<app-toaster />
