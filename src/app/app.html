@@ -5,6 +5,7 @@
   <button class="btn" (click)="toastService.warning('¡Advertencia!')">
     Probar toast de advertencia
   </button>
+  <button class="btn" (click)="probarConfirm()">Probar confirm</button>
   <button class="btn" (click)="toastService.error('¡Error!')">Probar toast de error</button>
   <div class="card bg-base-200 p-4">Tarjeta en base-200</div>
   <span class="badge badge-success">Completado</span>
@@ -12,3 +13,4 @@
 </main>
 <router-outlet />
 <app-toaster />
+<app-confirm-dialog />
