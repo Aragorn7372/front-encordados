@@ -63,7 +63,6 @@ describe('ConfirmDialog', () => {
     await fixture.whenStable();
 
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
-    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
 
     await fixture.whenStable();
