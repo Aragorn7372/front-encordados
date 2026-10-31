@@ -1,32 +1,15 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
-import { provideSpanishLocale } from './core/config/i18n/provide-locale';
 
 describe('App', () => {
-  beforeEach(async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({ matches: false })),
-    );
-    localStorage.clear();
-
-    await TestBed.configureTestingModule({
-      imports: [App],
-      providers: [provideSpanishLocale()],
-    }).compileComponents();
-  });
-
-  afterEach(() => vi.unstubAllGlobals());
-
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  it('muestra la fecha y la moneda en español', async () => {
+  it('monta las notificaciones globales fuera del layout, para que se vean en el login', async () => {
+    TestBed.configureTestingModule({ imports: [App], providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const text = (fixture.nativeElement as HTMLElement).querySelector('p')?.textContent ?? '';
-    expect(text).toMatch(/12,50\s€/);
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('app-toaster')).not.toBeNull();
+    expect(element.querySelector('app-confirm-dialog')).not.toBeNull();
   });
 });

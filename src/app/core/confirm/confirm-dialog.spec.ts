@@ -3,6 +3,9 @@ import { ConfirmDialog } from './confirm-dialog';
 import { ConfirmService } from './confirm.service';
 
 describe('ConfirmDialog', () => {
+  const boton = (dialog: HTMLElement, texto: string) =>
+    [...dialog.querySelectorAll('button')].find((b) => b.textContent?.includes(texto))!;
+
   beforeEach(() => {
     // jsdom no implementa <dialog>: imitamos lo mínimo (el atributo "open")
     HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
@@ -25,7 +28,7 @@ describe('ConfirmDialog', () => {
     expect(dialog.textContent).toContain('¿Seguro?');
   });
 
-  it('al cerrar el diálogo con close(true) se resuelve la promesa con true', async () => {
+  it('pulsar Aceptar resuelve con true y cierra el diálogo', async () => {
     const fixture = TestBed.createComponent(ConfirmDialog);
     const confirm = TestBed.inject(ConfirmService);
 
@@ -33,30 +36,25 @@ describe('ConfirmDialog', () => {
     await fixture.whenStable();
 
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
-    const botones = [...dialog.querySelectorAll('button')];
-    const aceptar = botones.find((b) => b.textContent?.includes('Aceptar'))!;
-    aceptar.click();
+    boton(dialog, 'Aceptar').click();
 
     await expect(promise).resolves.toBe(true);
-
-    const result = await promise;
-    expect(result).toBe(true);
+    await fixture.whenStable();
+    expect(dialog.open).toBe(false);
   });
 
-  it('al cerrar el diálogo con close(false) se resuelve la promesa con false', async () => {
+  it('pulsar Cancelar resuelve con false', async () => {
     const fixture = TestBed.createComponent(ConfirmDialog);
     const confirm = TestBed.inject(ConfirmService);
     const promise = confirm.ask({ title: 'Borrar pedido', message: '¿Seguro?' });
     await fixture.whenStable();
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
-    const botones = [...dialog.querySelectorAll('button')];
-    const cancelar = botones.find((b) => b.textContent?.includes('Cancelar'))!;
-    cancelar.click();
+    boton(dialog, 'Cancelar').click();
 
     await expect(promise).resolves.toBe(false);
   });
 
-  it('al pulsar ESC se cierra el diálogo y se resuelve la promesa con false', async () => {
+  it('Esc resuelve con false', async () => {
     const fixture = TestBed.createComponent(ConfirmDialog);
     const confirm = TestBed.inject(ConfirmService);
     const promise = confirm.ask({ title: 'Borrar pedido', message: '¿Seguro?' });
@@ -65,9 +63,7 @@ describe('ConfirmDialog', () => {
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
     dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
 
-    await fixture.whenStable();
-    const result = await promise;
-    expect(result).toBe(false);
+    await expect(promise).resolves.toBe(false);
   });
 
   it('con danger=true el botón de aceptar es rojo', async () => {
@@ -76,27 +72,25 @@ describe('ConfirmDialog', () => {
     void confirm.ask({ title: 'Borrar pedido', message: '¿Seguro?', danger: true });
     await fixture.whenStable();
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
-    const acceptButton = dialog.querySelector('button.btn-error')!;
-    expect(acceptButton.classList).toContain('btn-error');
+    expect(boton(dialog, 'Aceptar').classList).toContain('btn-error');
   });
 
-  it('con danger=false el botón de aceptar es azul', async () => {
+  it('sin danger el botón de aceptar es primary', async () => {
     const fixture = TestBed.createComponent(ConfirmDialog);
     const confirm = TestBed.inject(ConfirmService);
     void confirm.ask({ title: 'Borrar pedido', message: '¿Seguro?', danger: false });
     await fixture.whenStable();
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
-    const acceptButton = dialog.querySelector('button.btn-primary')!;
-    expect(acceptButton.classList).not.toContain('btn-error');
+    expect(boton(dialog, 'Aceptar').classList).toContain('btn-primary');
   });
 
-  it('confirmTest: borrar, el botón de aceptar dice "Borrar"', async () => {
+  it('confirmText cambia el texto del botón de confirmar', async () => {
     const fixture = TestBed.createComponent(ConfirmDialog);
     const confirm = TestBed.inject(ConfirmService);
     void confirm.ask({ title: 'Borrar pedido', message: '¿Seguro?', confirmText: 'Borrar' });
     await fixture.whenStable();
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
-    const acceptButton = dialog.querySelector('button.btn-primary')!;
-    expect(acceptButton.textContent).toContain('Borrar');
+    const botones = dialog.querySelectorAll('button');
+    expect(botones[botones.length - 1].textContent).toContain('Borrar');
   });
 });

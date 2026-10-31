@@ -6,6 +6,8 @@ export interface AppError {
   fieldErrors: Record<string, string[]>;
 }
 
+const camelCase = (key: string) => key.charAt(0).toLowerCase() + key.slice(1);
+
 export function toAppError(err: HttpErrorResponse): AppError {
   const body = err.error;
   const fieldErrors: Record<string, string[]> = {};
@@ -15,11 +17,13 @@ export function toAppError(err: HttpErrorResponse): AppError {
   else if (err.status === 429) message = 'Demasiadas peticiones, espera unos segundos';
   else if (Array.isArray(body)) {
     // FluentValidation: [{propertyName, errorMessage}]
-    for (const e of body) (fieldErrors[e.propertyName] ??= []).push(e.errorMessage);
+    for (const e of body) (fieldErrors[camelCase(e.propertyName)] ??= []).push(e.errorMessage);
     message = body[0]?.errorMessage ?? message;
   } else if (body?.errors) {
     // ValidationProblemDetails
-    Object.assign(fieldErrors, body.errors);
+    for (const [key, messages] of Object.entries<string[]>(body.errors)) {
+      fieldErrors[camelCase(key)] = messages;
+    }
     message = body.title ?? message;
   } else if (typeof body === 'string' && body.trim()) message = body;
   else message = body?.message ?? body?.error ?? message; // {message} | {error} | GlobalExceptionHandler

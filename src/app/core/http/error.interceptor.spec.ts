@@ -6,18 +6,22 @@ import { firstValueFrom } from 'rxjs';
 import { errorInterceptor, SILENT_ERRORS } from './error.interceptor';
 import { ToastService } from '../toast/toast.service';
 import { AppError } from './app-error';
+import { AuthStore } from '../auth/store/auth.store';
 
 describe('errorInterceptor', () => {
   let http: HttpClient;
   let backend: HttpTestingController;
   let toast: ToastService;
+  const auth = { isLoggedIn: vi.fn(() => false), logout: vi.fn() };
 
   beforeEach(() => {
+    vi.clearAllMocks();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(), // ← el backend falso; SIEMPRE después de provideHttpClient
         provideRouter([]),
+        { provide: AuthStore, useValue: auth },
       ],
     });
     http = TestBed.inject(HttpClient);
@@ -56,6 +60,26 @@ describe('errorInterceptor', () => {
       message: 'Datos inválidos',
     });
     expect(toast.toasts()).toHaveLength(0);
+  });
+
+  it('un 401 con sesión abierta cierra la sesión sin toast de error', async () => {
+    auth.isLoggedIn.mockReturnValueOnce(true);
+    const promesa = firstValueFrom(http.get('/api/test'));
+
+    backend.expectOne('/api/test').flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    await expect(promesa).rejects.toMatchObject<Partial<AppError>>({ status: 401 });
+    expect(auth.logout).toHaveBeenCalledWith('Tu sesión ha caducado');
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
+  it('un 401 sin sesión (credenciales incorrectas) no hace logout', async () => {
+    const promesa = firstValueFrom(http.get('/api/test'));
+
+    backend.expectOne('/api/test').flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    await expect(promesa).rejects.toMatchObject<Partial<AppError>>({ status: 401 });
+    expect(auth.logout).not.toHaveBeenCalled();
   });
 
   it('en un 403 navega a /403 y no muestra toast', async () => {

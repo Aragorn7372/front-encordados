@@ -37,7 +37,7 @@ describe('ConfirmService', () => {
     expect(() => service.close(false)).not.toThrow();
   });
 
-  it('second ask() cancela la primera y abre la segunda', async () => {
+  it('un segundo ask() cancela el primero y abre el nuevo', async () => {
     const primera = service.ask({ title: 'Borrar pedido', message: '¿Seguro?' });
     const segunda = service.ask({ title: 'Borrar cliente', message: '¿Seguro?' });
 

@@ -49,7 +49,7 @@ describe('toAppError', () => {
     expect(toAppError(err)).toEqual<AppError>({
       status: 400,
       message: 'One or more validation errors occurred.',
-      fieldErrors: { Username: ['Requerido'] },
+      fieldErrors: { username: ['Requerido'] },
     });
   });
 
