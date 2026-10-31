@@ -91,14 +91,14 @@ export const routes: Routes = [
           roles: ['ADMIN', 'OWNER', 'ENCORDER'],
           nav: { label: 'Torneos', icon: 'torneos' },
         },
-        loadComponent: enConstruccion,
+        loadComponent: () => import('./features/torneos/pages/torneos-list'),
       },
       {
         path: 'torneos/:id',
         title: 'Torneo',
         canMatch: [roleGuard],
         data: { roles: ['ADMIN', 'OWNER', 'ENCORDER'] },
-        loadComponent: enConstruccion,
+        loadComponent: () => import('./features/torneos/pages/torneo-detail'),
       },
       {
         path: 'informes',

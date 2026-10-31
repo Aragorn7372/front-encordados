@@ -4,14 +4,15 @@ import { AuthStore } from '../core/auth/store/auth.store';
 import { ROLE_LABEL } from '../shared/models/roles';
 import { Icon } from '../shared/ui/icon';
 import { ThemeToggle } from '../shared/ui/theme-toggle';
+import { TournamentSwitcher } from './tournament-switcher';
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, Icon, ThemeToggle],
+  imports: [RouterLink, Icon, ThemeToggle, TournamentSwitcher],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="navbar bg-base-100 border-base-300 sticky top-0 z-30 border-b">
-      <div class="flex-1">
+      <div class="flex flex-1 items-center gap-2">
         <button
           type="button"
           class="btn btn-ghost btn-square lg:hidden"
@@ -20,6 +21,7 @@ import { ThemeToggle } from '../shared/ui/theme-toggle';
         >
           <app-icon name="menu" />
         </button>
+        <app-tournament-switcher />
       </div>
 
       <app-theme-toggle />
