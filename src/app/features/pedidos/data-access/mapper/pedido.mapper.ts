@@ -1,4 +1,5 @@
 import { LineStatus, PaymentStatus } from '../../../../shared/models/status';
+import { contiene } from '../../../../shared/utils/texto';
 import { PedidoLineaDto, PurchasedDto, StringSetupDto } from '../dto/pedido.dto';
 import { Columna, LineaPedido, Pedido, Tarjeta } from '../model/pedido.model';
 
@@ -147,16 +148,8 @@ export function tarjetasDe(pedido: Pedido): Tarjeta[] {
   }));
 }
 
-const normalizar = (texto: string) => texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-
 const nombreLinea = (linea: LineaPedido) =>
   linea.tipo === 'taller' ? linea.articulo : linea.raqueta;
-
-function coincide(campos: (string | undefined)[], busqueda: string): boolean {
-  const termino = normalizar(busqueda.trim());
-  if (!termino) return true;
-  return campos.some((campo) => normalizar(campo ?? '').includes(termino));
-}
 
 const camposPedido = (pedido: Pedido) => [
   pedido.jugador.name,
@@ -169,14 +162,14 @@ const camposPedido = (pedido: Pedido) => [
 
 /** Búsqueda sobre los pedidos ya cargados, sin distinguir mayúsculas ni acentos. */
 export function coincideBusqueda(pedido: Pedido, busqueda: string): boolean {
-  return coincide([...camposPedido(pedido), ...pedido.lineas.map(nombreLinea)], busqueda);
+  return contiene([...camposPedido(pedido), ...pedido.lineas.map(nombreLinea)], busqueda);
 }
 
 /** Por tarjeta: buscar «pure aero» no debe sacar las otras raquetas del mismo pedido. */
 export function coincideTarjeta({ pedido, linea }: Tarjeta, busqueda: string): boolean {
   const cuerdas =
     linea.tipo === 'encordado' ? [linea.vertical.cuerda, linea.horizontal.cuerda] : [];
-  return coincide([...camposPedido(pedido), nombreLinea(linea), ...cuerdas], busqueda);
+  return contiene([...camposPedido(pedido), nombreLinea(linea), ...cuerdas], busqueda);
 }
 
 /** El backend no cancela lo ya completado o entregado. */

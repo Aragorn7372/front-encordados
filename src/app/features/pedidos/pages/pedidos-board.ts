@@ -303,7 +303,13 @@ export default class PedidosBoard {
   protected onCreado(pedido: Pedido): void {
     this.creando.set(false);
     this.store.applyChange(pedido);
-    this.toast.success('Pedido creado');
+    // En «Mis asignados» no se verá si es de otro: que no parezca que se ha perdido
+    const otro = pedido.encordador.username !== this.auth.username();
+    this.toast.success(
+      otro
+        ? `Pedido creado y asignado a ${pedido.encordador.name || pedido.encordador.username}`
+        : 'Pedido creado',
+    );
   }
 
   protected abrir(id: string): void {

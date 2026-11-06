@@ -1,8 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { guardarFichero, nombreDeFichero } from '../../../core/files/download';
+import { ExcelActions } from '../../../core/excel/excel-actions';
 import { TournamentContext } from '../../../core/tournament-context/tournament-context';
 import { LINE_STATUS, PAYMENT_STATUS, PaymentStatus } from '../../../shared/models/status';
 import { EmptyState } from '../../../shared/ui/empty-state';
@@ -13,7 +12,6 @@ import { StatCard } from '../../../shared/ui/stat-card';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { coincideBusqueda } from '../data-access/mapper/pedido.mapper';
 import { Pedido } from '../data-access/model/pedido.model';
-import { PedidosApi } from '../data-access/api/pedidos.api';
 import { PedidosStore } from '../data-access/store/pedidos.store';
 import { LineaActualizada, PedidoDetalle } from '../ui/pedido-detalle';
 
@@ -42,6 +40,7 @@ function resultado(pedido: Pedido): Resultado | null {
     Modal,
     PageHeader,
     PedidoDetalle,
+    ExcelActions,
     SearchInput,
     StatCard,
     StatusBadge,
@@ -50,15 +49,12 @@ function resultado(pedido: Pedido): Resultado | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header heading="Terminados" subtitle="Pedidos listos, entregados o cancelados">
-      <button
-        type="button"
-        class="btn"
-        [disabled]="!torneo() || exportando()"
-        [attr.title]="torneo() ? null : 'Elige un torneo en la barra superior'"
-        (click)="exportar()"
-      >
-        {{ exportando() ? 'Exportando…' : 'Exportar a Excel' }}
-      </button>
+      <app-excel-actions
+        [tournamentId]="torneo()"
+        [tipos]="['pedidos']"
+        [conImportar]="false"
+        nombre="pedidos.xlsx"
+      />
     </app-page-header>
 
     @if (store.needsTournament()) {
@@ -193,7 +189,6 @@ function resultado(pedido: Pedido): Resultado | null {
 })
 export default class Terminados {
   protected readonly store = inject(PedidosStore);
-  private readonly api = inject(PedidosApi);
   private readonly context = inject(TournamentContext);
   private readonly router = inject(Router);
 
@@ -203,7 +198,6 @@ export default class Terminados {
   readonly estado = input<Resultado>();
 
   protected readonly torneo = this.context.selectedId;
-  protected readonly exportando = signal(false);
   protected readonly abiertoId = signal<string | null>(null);
   protected readonly resultados = RESULTADOS;
   protected readonly estadoInfo = LINE_STATUS;
@@ -272,19 +266,5 @@ export default class Terminados {
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
-  }
-
-  protected async exportar(): Promise<void> {
-    const torneo = this.torneo();
-    if (!torneo) return;
-    this.exportando.set(true);
-    try {
-      const response = await firstValueFrom(this.api.exportPedidos(torneo));
-      guardarFichero(response.body!, nombreDeFichero(response, `pedidos_${torneo}.xlsx`));
-    } catch {
-      // El interceptor ya ha mostrado el error
-    } finally {
-      this.exportando.set(false);
-    }
   }
 }

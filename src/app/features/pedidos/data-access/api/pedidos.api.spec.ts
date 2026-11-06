@@ -65,14 +65,4 @@ describe('PedidosApi', () => {
     expect(request.method).toBe('PATCH');
     expect(request.body).toBe('"IN_PROGRESS"');
   });
-
-  it('exporta pedidos con la exportación avanzada y acepta errores en JSON', () => {
-    api.exportPedidos('t1').subscribe();
-
-    const { request } = backend.expectOne((req) => req.url === '/api/excel/advanced/export');
-    expect(request.params.get('tournamentId')).toBe('t1');
-    expect(request.params.get('types')).toBe('pedidos');
-    expect(request.responseType).toBe('blob');
-    expect(request.headers.get('Accept')).toContain('application/json');
-  });
 });

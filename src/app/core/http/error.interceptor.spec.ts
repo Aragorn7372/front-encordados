@@ -95,6 +95,24 @@ describe('errorInterceptor', () => {
     expect(toast.toasts()).toHaveLength(0);
   });
 
+  it('en un 403 con SILENT_ERRORS no navega: el componente muestra el mensaje', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const promesa = firstValueFrom(
+      http.get('/api/test', { context: new HttpContext().set(SILENT_ERRORS, true) }),
+    );
+
+    backend
+      .expectOne('/api/test')
+      .flush({ message: 'No tienes permisos' }, { status: 403, statusText: 'Forbidden' });
+
+    await expect(promesa).rejects.toMatchObject<Partial<AppError>>({
+      status: 403,
+      message: 'No tienes permisos',
+    });
+    expect(navigate).not.toHaveBeenCalled();
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
   it('una petición correcta pasa sin tocarla y sin toast', async () => {
     const promesa = firstValueFrom(http.get('/api/test'));
 

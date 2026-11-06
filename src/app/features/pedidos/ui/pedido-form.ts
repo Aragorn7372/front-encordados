@@ -20,7 +20,6 @@ import {
   max,
   maxLength,
   min,
-  readonly,
   required,
   validate,
 } from '@angular/forms/signals';
@@ -63,7 +62,10 @@ export class PedidoForm implements OnInit {
   readonly created = output<Pedido>();
   readonly cancelled = output();
 
-  /** El encordador crea pedidos a su nombre: el backend no le deja ver al resto de máquinas. */
+  /**
+   * El encordador puede asignar el pedido a cualquier encordador del torneo, pero no puede leer
+   * /workers (reservado a OWNER): de máquinas solo conoce la suya, la que guardó la última vez.
+   */
   protected readonly esEncordador = computed(() => this.auth.hasRole('ENCORDER'));
   protected readonly creandoJugador = signal(false);
   protected readonly pagos = Object.entries(PAYMENT_STATUS).map(([value, info]) => ({
@@ -86,9 +88,18 @@ export class PedidoForm implements OnInit {
     const extra = this.jugadorExtra();
     return extra && !lista.some((j) => j.username === extra.username) ? [extra, ...lista] : lista;
   });
-  protected readonly encordadores = computed(() =>
-    this.datos.hasValue() ? this.datos.value().encordadores : [],
-  );
+  protected readonly encordadores = computed(() => {
+    const lista = this.datos.hasValue() ? this.datos.value().encordadores : [];
+    if (!this.esEncordador()) return lista;
+    // Él primero, con su máquina guardada, aunque el detalle del torneo no le incluyera
+    const yo = this.auth.username() ?? '';
+    const propio = {
+      username: yo,
+      name: lista.find((e) => e.username === yo)?.name ?? yo,
+      maquina: localStorage.getItem(maquinaGuardada(this.tournamentId())) || null,
+    };
+    return [propio, ...lista.filter((e) => e.username !== yo)];
+  });
   protected readonly maquinas = computed(() => [
     ...new Set(this.encordadores().flatMap((e) => (e.maquina ? [e.maquina] : []))),
   ]);
@@ -102,7 +113,6 @@ export class PedidoForm implements OnInit {
     (path) => {
       required(path.jugador, { message: 'Elige el jugador' });
       required(path.encordador, { message: 'Elige el encordador' });
-      readonly(path.encordador, () => this.esEncordador());
       required(path.maquina, { message: 'Indica la máquina' });
       maxLength(path.maquina, 100, { message: 'No puede superar 100 caracteres' });
       required(path.fecha, { message: 'Indica para cuándo es' });
@@ -159,7 +169,8 @@ export class PedidoForm implements OnInit {
             const pedido = await firstValueFrom(
               this.api.create(toPurchasedRequest(value, this.tournamentId())),
             );
-            if (this.esEncordador()) {
+            // Solo la suya: si lo asigna a otro, esa máquina no es la de él
+            if (this.esEncordador() && value.encordador === this.auth.username()) {
               localStorage.setItem(maquinaGuardada(this.tournamentId()), value.maquina.trim());
             }
             this.created.emit(pedido);
@@ -214,15 +225,15 @@ export class PedidoForm implements OnInit {
 
   ngOnInit() {
     const inicial = this.inicial();
-    const base = inicial ?? pedidoVacio();
-    const propio = this.esEncordador()
-      ? {
-          encordador: this.auth.username() ?? '',
-          maquina:
-            base.maquina || (localStorage.getItem(maquinaGuardada(this.tournamentId())) ?? ''),
-        }
-      : {};
-    this.model.set({ ...base, ...propio });
+    // Repetir conserva el encordador y la máquina del original; uno nuevo, el propio encordador
+    if (inicial || !this.esEncordador()) {
+      this.model.set(inicial ?? pedidoVacio());
+      return;
+    }
+    const maquina = localStorage.getItem(maquinaGuardada(this.tournamentId())) ?? '';
+    // Rellenada por nosotros: si elige a otro encordador, se quita
+    this.maquinaPuesta = maquina;
+    this.model.set({ ...pedidoVacio(), encordador: this.auth.username() ?? '', maquina });
   }
 
   protected setTipo(tipo: PedidoFormValue['tipo']): void {

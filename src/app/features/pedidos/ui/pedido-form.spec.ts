@@ -132,3 +132,84 @@ describe('PedidoForm', () => {
     expect(maquina().value).toBe('Propia');
   });
 });
+
+describe('PedidoForm como ENCORDER', () => {
+  const api = {
+    // Sin /workers: el ENCORDER no puede leerlo, así que no hay máquinas
+    datosNuevoPedido: vi.fn(() =>
+      of({
+        jugadores: [{ username: 'ana', name: 'Ana', bonos: 0 }],
+        encordadores: [
+          { username: 'carlos', name: 'Carlos', maquina: null },
+          { username: 'maria', name: 'María', maquina: null },
+        ],
+      }),
+    ),
+    create: vi.fn((request: unknown) => of({ id: 'p1', request })),
+  };
+  let fixture: ComponentFixture<PedidoForm>;
+
+  const element = () => fixture.nativeElement as HTMLElement;
+  const campo = <T extends HTMLElement>(selector: string) => element().querySelector<T>(selector)!;
+  const poner = async (selector: string, valor: string, evento = 'input') => {
+    const control = campo<HTMLInputElement>(selector);
+    control.value = valor;
+    control.dispatchEvent(new Event(evento));
+    if (selector === '#pedido-encordador') control.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    localStorage.setItem('etr_maquina:t1', 'Mi máquina');
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PedidosApi, useValue: api },
+        {
+          provide: AuthStore,
+          useValue: {
+            hasRole: (...roles: string[]) => roles.includes('ENCORDER'),
+            username: () => 'carlos',
+          },
+        },
+      ],
+    });
+    fixture = TestBed.createComponent(PedidoForm);
+    fixture.componentRef.setInput('tournamentId', 't1');
+    await fixture.whenStable();
+  });
+
+  afterEach(() => localStorage.removeItem('etr_maquina:t1'));
+
+  it('elige entre todos los encordadores, empezando por él con su máquina', async () => {
+    expect(api.datosNuevoPedido).toHaveBeenCalledWith('t1', false);
+    const opciones = [...element().querySelectorAll('#pedido-encordador option')].map(
+      (o) => (o as HTMLOptionElement).value,
+    );
+    expect(opciones).toEqual(['', 'carlos', 'maria']);
+    expect(campo<HTMLSelectElement>('#pedido-encordador').value).toBe('carlos');
+    expect(campo<HTMLInputElement>('#pedido-maquina').value).toBe('Mi máquina');
+  });
+
+  it('al asignarlo a otro se quita su máquina, y vuelve si se elige otra vez', async () => {
+    await poner('#pedido-encordador', 'maria');
+    expect(campo<HTMLInputElement>('#pedido-maquina').value).toBe('');
+
+    await poner('#pedido-encordador', 'carlos');
+    expect(campo<HTMLInputElement>('#pedido-maquina').value).toBe('Mi máquina');
+  });
+
+  it('un pedido para otro no cambia la máquina que tiene guardada', async () => {
+    await poner('#pedido-jugador', 'ana');
+    await poner('#pedido-encordador', 'maria');
+    await poner('#pedido-maquina', 'Máquina de María');
+    await poner('#linea-raqueta-0', 'Pure Aero');
+    await poner('#linea-cuerdav-0', 'RPM');
+
+    campo('form').dispatchEvent(new Event('submit', { cancelable: true }));
+    await fixture.whenStable();
+
+    expect(api.create).toHaveBeenCalledWith(expect.objectContaining({ assignedToName: 'maria' }));
+    expect(localStorage.getItem('etr_maquina:t1')).toBe('Mi máquina');
+  });
+});

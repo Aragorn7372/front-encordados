@@ -61,21 +61,17 @@
 
     <fieldset class="fieldset">
       <label class="fieldset-legend" for="pedido-encordador">Encordador</label>
-      @if (esEncordador()) {
-        <input id="pedido-encordador" class="input w-full" [formField]="form.encordador" />
-      } @else {
-        <select
-          id="pedido-encordador"
-          class="select w-full"
-          [formField]="form.encordador"
-          (change)="onEncordador($event)"
-        >
-          <option value="">Selecciona un encordador</option>
-          @for (e of encordadores(); track e.username) {
-            <option [value]="e.username">{{ e.name || e.username }}</option>
-          }
-        </select>
-      }
+      <select
+        id="pedido-encordador"
+        class="select w-full"
+        [formField]="form.encordador"
+        (change)="onEncordador($event)"
+      >
+        <option value="">Selecciona un encordador</option>
+        @for (e of encordadores(); track e.username) {
+          <option [value]="e.username">{{ e.name || e.username }}</option>
+        }
+      </select>
       <app-field-error [field]="form.encordador" />
     </fieldset>
 
@@ -119,11 +115,7 @@
           <span class="font-medium">Raqueta {{ i + 1 }}</span>
           <label class="input input-sm w-32">
             <span class="label">Unidades</span>
-            <input
-              [id]="'linea-cantidad-' + i"
-              type="number"
-              [formField]="linea.cantidad"
-            />
+            <input [id]="'linea-cantidad-' + i" type="number" [formField]="linea.cantidad" />
           </label>
           @if (i > 0) {
             @if (linea.fecha().value()) {

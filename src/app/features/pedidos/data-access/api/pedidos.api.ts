@@ -10,8 +10,6 @@ import { PurchasedRequest } from '../mapper/pedido-request';
 import { Pedido } from '../model/pedido.model';
 
 const BASE = '/api/purchased';
-const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
 /** El tablero necesita todos los pedidos a la vez, no se puede paginar por columnas. */
 export const TABLERO_MAX = 200;
 
@@ -172,19 +170,5 @@ export class PedidosApi {
 
   cancelLine(lineaId: string) {
     return this.http.patch<PedidoLineaDto>(`${BASE}/lineas/${lineaId}/cancel`, null);
-  }
-
-  /**
-   * Excel de pedidos para OWNER (sus torneos) y ADMIN. La exportación simple
-   * (/api/excel/export) es solo para el SUPERVISOR del torneo: ni su propietario puede usarla.
-   */
-  exportPedidos(tournamentId: string) {
-    return this.http.get('/api/excel/advanced/export', {
-      params: { tournamentId, types: 'pedidos' },
-      observe: 'response',
-      responseType: 'blob',
-      // También JSON: si solo se acepta Excel, un error llega como 406 y sin su mensaje
-      headers: { Accept: `${XLSX}, application/json` },
-    });
   }
 }
