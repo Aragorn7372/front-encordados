@@ -1,8 +1,8 @@
 import { Injectable, computed, inject, resource, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { TournamentContext } from '../../../core/tournament-context/tournament-context';
-import { PageQuery } from '../../../shared/models/page';
-import { TorneosApi } from './torneos.api';
+import { TournamentContext } from '../../../../core/tournament-context/tournament-context';
+import { PageQuery } from '../../../../shared/models/page';
+import { TorneosApi } from '../api/torneos.api';
 
 /** Estado de la pantalla de listado: la query manda y el recurso se recarga solo. */
 @Injectable()

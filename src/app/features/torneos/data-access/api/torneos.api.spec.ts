@@ -3,8 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { TorneosApi } from './torneos.api';
-import { endOfDay } from './torneos.mapper';
-import { TournamentFormValue } from './torneos.models';
+import { endOfDay } from '../mapper/torneos.mapper';
+import { TournamentFormValue } from '../model/torneo.model';
 
 describe('TorneosApi', () => {
   let api: TorneosApi;

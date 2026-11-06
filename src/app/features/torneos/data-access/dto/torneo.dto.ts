@@ -1,4 +1,4 @@
-import { TournamentSummary } from '../../../shared/models/tournament';
+/** Contrato del backend para torneos: los nombres tal cual, erratas incluidas. */
 
 /** UserResponseDto: viene sin id ni email. */
 export interface TournamentUser {
@@ -27,22 +27,7 @@ export interface TournamentDetailsDto {
   supevisors: TournamentUser[];
 }
 
-export interface TournamentDetails extends TournamentSummary {
-  stringers: TournamentUser[];
-  owner: TournamentUser;
-  supervisors: TournamentUser[];
-}
-
 export interface WorkerAssignment {
   machineName: string;
   user: TournamentUser;
-}
-
-export interface TournamentFormValue {
-  name: string;
-  /** yyyy-MM-dd, el formato de <input type="date">. */
-  startDate: string;
-  endDate: string;
-  ownerId: string;
-  logo: File | null;
 }

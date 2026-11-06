@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
-import { TorneosApi } from '../data-access/torneos.api';
+import { TorneosApi } from '../data-access/api/torneos.api';
 import { WorkersPanel } from './workers-panel';
 
 const user = (username: string) => ({ username, name: username, imageUrl: '', bonos: 0 });

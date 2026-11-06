@@ -14,8 +14,8 @@ import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { ToastService } from '../../../core/toast/toast.service';
 import { FieldError } from '../../../shared/ui/field-error';
-import { TorneosApi } from '../data-access/torneos.api';
-import { TournamentUser, WorkerAssignment } from '../data-access/torneos.models';
+import { TorneosApi } from '../data-access/api/torneos.api';
+import { TournamentUser, WorkerAssignment } from '../data-access/dto/torneo.dto';
 
 @Component({
   selector: 'app-workers-panel',

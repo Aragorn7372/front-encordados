@@ -1,17 +1,13 @@
 import { HttpClient, HttpContext, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { map } from 'rxjs';
-import { toFormData } from '../../../core/http/form-data';
-import { SILENT_ERRORS } from '../../../core/http/error.interceptor';
-import { PageQuery, PageResponse, toPageParams } from '../../../shared/models/page';
-import { TournamentSummary } from '../../../shared/models/tournament';
-import { endOfDay, startOfDay, toTournamentDetails } from './torneos.mapper';
-import {
-  StaffUser,
-  TournamentDetailsDto,
-  TournamentFormValue,
-  WorkerAssignment,
-} from './torneos.models';
+import { toFormData } from '../../../../core/http/form-data';
+import { SILENT_ERRORS } from '../../../../core/http/error.interceptor';
+import { PageQuery, PageResponse, toPageParams } from '../../../../shared/models/page';
+import { TournamentSummary } from '../../../../shared/models/tournament';
+import { endOfDay, startOfDay, toTournamentDetails } from '../mapper/torneos.mapper';
+import { StaffUser, TournamentDetailsDto, WorkerAssignment } from '../dto/torneo.dto';
+import { TournamentFormValue } from '../model/torneo.model';
 
 const BASE = '/api/tournaments';
 const USERS = '/api/user';

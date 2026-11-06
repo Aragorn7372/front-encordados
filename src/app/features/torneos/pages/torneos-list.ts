@@ -8,7 +8,7 @@ import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
 import { Paginator } from '../../../shared/ui/paginator';
 import { SearchInput } from '../../../shared/ui/search-input';
-import { TorneosStore } from '../data-access/torneos.store';
+import { TorneosStore } from '../data-access/store/torneos.store';
 import { TorneoCard } from '../ui/torneo-card';
 import { TorneoForm } from '../ui/torneo-form';
 

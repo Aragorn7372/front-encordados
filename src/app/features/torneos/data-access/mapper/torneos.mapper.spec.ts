@@ -1,5 +1,5 @@
 import { endOfDay, startOfDay, toDateInput, toTournamentDetails } from './torneos.mapper';
-import { TournamentDetailsDto, TournamentUser } from './torneos.models';
+import { TournamentDetailsDto, TournamentUser } from '../dto/torneo.dto';
 
 describe('torneos.mapper', () => {
   const user = (username: string): TournamentUser => ({

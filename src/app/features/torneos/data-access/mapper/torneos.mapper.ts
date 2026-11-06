@@ -1,4 +1,5 @@
-import { TournamentDetails, TournamentDetailsDto } from './torneos.models';
+import { TournamentDetails } from '../model/torneo.model';
+import { TournamentDetailsDto } from '../dto/torneo.dto';
 
 /** Único sitio que conoce las diferencias del DTO de detalle frente al del listado. */
 export function toTournamentDetails(dto: TournamentDetailsDto): TournamentDetails {

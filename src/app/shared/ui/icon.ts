@@ -12,6 +12,7 @@ const ICONS = {
   informes: '📊',
   usuarios: '👥',
   menu: '☰',
+  editar: '✏️',
   sol: '☀️',
   luna: '🌙',
 } as const;

@@ -1,0 +1,351 @@
+<div class="tabs tabs-box mb-4 w-fit" role="tablist" aria-label="Tipo de pedido">
+  <button
+    type="button"
+    role="tab"
+    class="tab"
+    [class.tab-active]="model().tipo === 'encordado'"
+    [attr.aria-selected]="model().tipo === 'encordado'"
+    (click)="setTipo('encordado')"
+  >
+    Encordado
+  </button>
+  <button
+    type="button"
+    role="tab"
+    class="tab"
+    [class.tab-active]="model().tipo === 'taller'"
+    [attr.aria-selected]="model().tipo === 'taller'"
+    (click)="setTipo('taller')"
+  >
+    Taller
+  </button>
+</div>
+
+@if (creandoJugador()) {
+  <app-contacto-rapido
+    class="mb-3 block"
+    [tournamentId]="tournamentId()"
+    (created)="onJugadorCreado($event)"
+    (cancelled)="creandoJugador.set(false)"
+  />
+}
+
+<form [formRoot]="form">
+  <div class="grid gap-x-4 sm:grid-cols-2">
+    <fieldset class="fieldset">
+      <label class="fieldset-legend" for="pedido-jugador">Jugador</label>
+      <div class="flex gap-2">
+        <select id="pedido-jugador" class="select w-full" [formField]="form.jugador">
+          <option value="">Selecciona un jugador</option>
+          @for (j of jugadores(); track j.username) {
+            <option [value]="j.username">{{ j.name || j.username }}</option>
+          }
+        </select>
+        <button
+          type="button"
+          class="btn btn-square"
+          aria-label="Nuevo jugador"
+          (click)="creandoJugador.set(true)"
+        >
+          +
+        </button>
+      </div>
+      <app-field-error [field]="form.jugador" />
+      @if (cargado() && jugadores().length === 0) {
+        <p class="label" role="status">Este torneo aún no tiene jugadores: créalo con «+».</p>
+      }
+      @if (avisoBonos(); as aviso) {
+        <p class="label text-info" role="status">{{ aviso }}</p>
+      }
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <label class="fieldset-legend" for="pedido-encordador">Encordador</label>
+      @if (esEncordador()) {
+        <input id="pedido-encordador" class="input w-full" [formField]="form.encordador" />
+      } @else {
+        <select
+          id="pedido-encordador"
+          class="select w-full"
+          [formField]="form.encordador"
+          (change)="onEncordador($event)"
+        >
+          <option value="">Selecciona un encordador</option>
+          @for (e of encordadores(); track e.username) {
+            <option [value]="e.username">{{ e.name || e.username }}</option>
+          }
+        </select>
+      }
+      <app-field-error [field]="form.encordador" />
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <label class="fieldset-legend" for="pedido-maquina">Máquina</label>
+      <input
+        id="pedido-maquina"
+        class="input w-full"
+        list="pedido-maquinas"
+        [formField]="form.maquina"
+      />
+      <datalist id="pedido-maquinas">
+        @for (m of maquinas(); track m) {
+          <option [value]="m"></option>
+        }
+      </datalist>
+      <app-field-error [field]="form.maquina" />
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <label class="fieldset-legend" for="pedido-fecha">Para cuándo</label>
+      <input
+        id="pedido-fecha"
+        class="input w-full"
+        type="datetime-local"
+        [formField]="form.fecha"
+      />
+      <app-field-error [field]="form.fecha" />
+    </fieldset>
+  </div>
+
+  @if (model().tipo === 'encordado') {
+    <label class="label mt-2 cursor-pointer gap-2">
+      <input type="checkbox" class="checkbox checkbox-sm" [formField]="form.materialPropio" />
+      El jugador trae su propia cuerda
+    </label>
+
+    @for (linea of form.lineas; track $index; let i = $index) {
+      <fieldset class="fieldset bg-base-200 rounded-box mt-3 p-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-medium">Raqueta {{ i + 1 }}</span>
+          <label class="input input-sm w-32">
+            <span class="label">Unidades</span>
+            <input
+              [id]="'linea-cantidad-' + i"
+              type="number"
+              [formField]="linea.cantidad"
+            />
+          </label>
+          @if (i > 0) {
+            @if (linea.fecha().value()) {
+              <input
+                class="input input-sm w-auto"
+                type="datetime-local"
+                [attr.aria-label]="'Fecha de la raqueta ' + (i + 1)"
+                [formField]="linea.fecha"
+              />
+              <button type="button" class="btn btn-ghost btn-xs" (click)="setFechaLinea(i, '')">
+                Usar la del pedido
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs"
+                (click)="setFechaLinea(i, model().fecha)"
+              >
+                Otra fecha
+              </button>
+            }
+          }
+          @if (model().lineas.length > 1) {
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs ms-auto"
+              [attr.aria-label]="'Quitar raqueta ' + (i + 1)"
+              (click)="removeLinea(i)"
+            >
+              Quitar
+            </button>
+          }
+        </div>
+        <app-field-error [field]="linea.cantidad" />
+        <div class="grid gap-2 sm:grid-cols-3">
+          <div class="sm:col-span-2">
+            <label class="fieldset-legend" [for]="'linea-raqueta-' + i">Modelo</label>
+            <input [id]="'linea-raqueta-' + i" class="input w-full" [formField]="linea.raqueta" />
+            <app-field-error [field]="linea.raqueta" />
+          </div>
+          <div>
+            <label class="fieldset-legend" [for]="'linea-nudos-' + i">Nudos</label>
+            <input
+              [id]="'linea-nudos-' + i"
+              class="input w-full"
+              type="number"
+              [formField]="linea.nudos"
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="fieldset-legend" [for]="'linea-cuerdav-' + i">Cuerda vertical</label>
+            <input [id]="'linea-cuerdav-' + i" class="input w-full" [formField]="linea.cuerdaV" />
+            <app-field-error [field]="linea.cuerdaV" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="fieldset-legend" [for]="'linea-tensionv-' + i">kg</label>
+              <input
+                [id]="'linea-tensionv-' + i"
+                class="input w-full"
+                type="number"
+                step="0.5"
+                [formField]="linea.tensionV"
+              />
+              <app-field-error [field]="linea.tensionV" />
+            </div>
+            <div>
+              <label class="fieldset-legend" [for]="'linea-prev-' + i">% pre.</label>
+              <input
+                [id]="'linea-prev-' + i"
+                class="input w-full"
+                type="number"
+                [formField]="linea.preestiradoV"
+              />
+              <app-field-error [field]="linea.preestiradoV" />
+            </div>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="fieldset-legend" [for]="'linea-cuerdah-' + i">
+              Cuerda horizontal (vacío = igual)
+            </label>
+            <input [id]="'linea-cuerdah-' + i" class="input w-full" [formField]="linea.cuerdaH" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="fieldset-legend" [for]="'linea-tensionh-' + i">kg</label>
+              <input
+                [id]="'linea-tensionh-' + i"
+                class="input w-full"
+                type="number"
+                step="0.5"
+                [formField]="linea.tensionH"
+              />
+              <app-field-error [field]="linea.tensionH" />
+            </div>
+            <div>
+              <label class="fieldset-legend" [for]="'linea-preh-' + i">% pre.</label>
+              <input
+                [id]="'linea-preh-' + i"
+                class="input w-full"
+                type="number"
+                [formField]="linea.preestiradoH"
+              />
+              <app-field-error [field]="linea.preestiradoH" />
+            </div>
+          </div>
+          <label class="label cursor-pointer gap-2 self-end sm:mb-3">
+            <input type="checkbox" class="checkbox checkbox-sm" [formField]="linea.logo" />
+            Con logo
+          </label>
+          <!-- El color es el del logo: sin logo no hay color que elegir -->
+          @if (linea.logo().value()) {
+            <div class="sm:col-span-2">
+              <label class="fieldset-legend" [for]="'linea-color-' + i">Color del logo</label>
+              <input [id]="'linea-color-' + i" class="input w-full" [formField]="linea.color" />
+              <app-field-error [field]="linea.color" />
+            </div>
+          }
+        </div>
+      </fieldset>
+    }
+    <app-field-error [field]="form.lineas" />
+    <button type="button" class="btn btn-sm mt-3" (click)="addLinea()">Añadir raqueta</button>
+  } @else {
+    <fieldset class="fieldset">
+      <label class="fieldset-legend" for="pedido-cuando">Cuándo (texto libre)</label>
+      <input id="pedido-cuando" class="input w-full" [formField]="form.cuando" />
+    </fieldset>
+
+    @for (articulo of form.articulos; track $index; let i = $index) {
+      <fieldset class="fieldset bg-base-200 rounded-box mt-3 grid gap-2 p-3 sm:grid-cols-4">
+        <div class="sm:col-span-2">
+          <label class="fieldset-legend" [for]="'articulo-nombre-' + i">Artículo</label>
+          <input
+            [id]="'articulo-nombre-' + i"
+            class="input w-full"
+            [formField]="articulo.articulo"
+          />
+          <app-field-error [field]="articulo.articulo" />
+        </div>
+        <div>
+          <label class="fieldset-legend" [for]="'articulo-cantidad-' + i">Cantidad</label>
+          <input
+            [id]="'articulo-cantidad-' + i"
+            class="input w-full"
+            type="number"
+            [formField]="articulo.cantidad"
+          />
+          <app-field-error [field]="articulo.cantidad" />
+        </div>
+        <div>
+          <label class="fieldset-legend" [for]="'articulo-precio-' + i">Precio/ud</label>
+          <input
+            [id]="'articulo-precio-' + i"
+            class="input w-full"
+            type="number"
+            step="0.5"
+            [formField]="articulo.precio"
+          />
+        </div>
+        <div class="sm:col-span-3">
+          <label class="fieldset-legend" [for]="'articulo-notas-' + i">Notas</label>
+          <input [id]="'articulo-notas-' + i" class="input w-full" [formField]="articulo.notas" />
+        </div>
+        @if (model().articulos.length > 1) {
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs self-end"
+            [attr.aria-label]="'Quitar artículo ' + (i + 1)"
+            (click)="removeArticulo(i)"
+          >
+            Quitar
+          </button>
+        }
+      </fieldset>
+    }
+    <button type="button" class="btn btn-sm mt-3" (click)="addArticulo()">Añadir artículo</button>
+  }
+
+  <div class="mt-4 grid gap-x-4 sm:grid-cols-2">
+    <fieldset class="fieldset">
+      <label class="fieldset-legend" for="pedido-precio">Precio total</label>
+      <input
+        id="pedido-precio"
+        class="input w-full"
+        type="number"
+        step="0.5"
+        [formField]="form.precio"
+      />
+      <app-field-error [field]="form.precio" />
+    </fieldset>
+    <fieldset class="fieldset">
+      <label class="fieldset-legend" for="pedido-pago">Pago</label>
+      <select id="pedido-pago" class="select w-full" [formField]="form.pago">
+        @for (opcion of pagos; track opcion.value) {
+          <option [value]="opcion.value">{{ opcion.label }}</option>
+        }
+      </select>
+    </fieldset>
+    <fieldset class="fieldset sm:col-span-2">
+      <label class="fieldset-legend" for="pedido-comentarios">Comentarios</label>
+      <textarea
+        id="pedido-comentarios"
+        class="textarea w-full"
+        rows="2"
+        [formField]="form.comentarios"
+      ></textarea>
+    </fieldset>
+  </div>
+
+  @for (error of form().errors(); track error.kind) {
+    <div role="alert" class="alert alert-error alert-soft mt-2">{{ error.message }}</div>
+  }
+
+  <div class="modal-action">
+    <button type="button" class="btn" (click)="cancelled.emit()">Cancelar</button>
+    <button class="btn btn-primary" [disabled]="form().submitting()">
+      Crear pedido
+      @if (model().tipo === 'encordado') {
+        · {{ raquetas() }} {{ raquetas() === 1 ? 'raqueta' : 'raquetas' }}
+      }
+      · {{ model().precio | currency: 'EUR' }}
+    </button>
+  </div>
+</form>

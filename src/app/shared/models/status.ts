@@ -21,7 +21,7 @@ export const LINE_STATUS: Record<LineStatus, StatusInfo> = {
 };
 
 export const PAYMENT_STATUS: Record<PaymentStatus, StatusInfo> = {
-  PENDING_PAYMENT: { label: 'Pendiente', tone: 'warning' },
+  PENDING_PAYMENT: { label: 'Pago pendiente', tone: 'warning' },
   PAID: { label: 'Pagado', tone: 'success' },
   FINNISH_TOURNAMENT: { label: 'Cerrado por torneo', tone: 'neutral' },
   CANCELED: { label: 'Cancelado', tone: 'error' },

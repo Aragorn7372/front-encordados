@@ -2,8 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthStore } from '../../../core/auth/store/auth.store';
 import { Role } from '../../../shared/models/roles';
-import { TorneosApi } from '../data-access/torneos.api';
-import { endOfDay, startOfDay } from '../data-access/torneos.mapper';
+import { TorneosApi } from '../data-access/api/torneos.api';
+import { endOfDay, startOfDay } from '../data-access/mapper/torneos.mapper';
 import { TorneoForm } from './torneo-form';
 
 describe('TorneoForm', () => {

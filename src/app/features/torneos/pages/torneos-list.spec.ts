@@ -6,7 +6,7 @@ import { AuthStore } from '../../../core/auth/store/auth.store';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { TournamentContext } from '../../../core/tournament-context/tournament-context';
 import { Role } from '../../../shared/models/roles';
-import { TorneosApi } from '../data-access/torneos.api';
+import { TorneosApi } from '../data-access/api/torneos.api';
 import TorneosList from './torneos-list';
 
 const torneo = {

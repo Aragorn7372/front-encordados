@@ -8,7 +8,7 @@ import { tournamentStatus } from '../../../shared/models/tournament';
 import { EmptyState } from '../../../shared/ui/empty-state';
 import { PageHeader } from '../../../shared/ui/page-header';
 import { StatusBadge } from '../../../shared/ui/status-badge';
-import { TorneosApi } from '../data-access/torneos.api';
+import { TorneosApi } from '../data-access/api/torneos.api';
 import { SupervisorsPanel } from '../ui/supervisors-panel';
 import { WorkersPanel } from '../ui/workers-panel';
 

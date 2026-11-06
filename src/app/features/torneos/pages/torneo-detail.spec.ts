@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthStore } from '../../../core/auth/store/auth.store';
 import { Role } from '../../../shared/models/roles';
-import { TorneosApi } from '../data-access/torneos.api';
+import { TorneosApi } from '../data-access/api/torneos.api';
 import TorneoDetail from './torneo-detail';
 
 const user = (username: string) => ({ username, name: username, imageUrl: '', bonos: 0 });

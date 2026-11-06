@@ -16,8 +16,8 @@ import { toFormErrors } from '../../../core/http/form-errors';
 import { TournamentSummary } from '../../../shared/models/tournament';
 import { FieldError } from '../../../shared/ui/field-error';
 import { FilePicker } from '../../../shared/ui/file-picker';
-import { TorneosApi } from '../data-access/torneos.api';
-import { toDateInput } from '../data-access/torneos.mapper';
+import { TorneosApi } from '../data-access/api/torneos.api';
+import { toDateInput } from '../data-access/mapper/torneos.mapper';
 
 @Component({
   selector: 'app-torneo-form',
