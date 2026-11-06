@@ -16,10 +16,11 @@ import { ToastService } from '../../../core/toast/toast.service';
 import { FieldError } from '../../../shared/ui/field-error';
 import { TorneosApi } from '../data-access/api/torneos.api';
 import { TournamentUser, WorkerAssignment } from '../data-access/dto/torneo.dto';
+import { Avatar } from '../../../shared/ui/avatar';
 
 @Component({
   selector: 'app-workers-panel',
-  imports: [FormField, FormRoot, FieldError],
+  imports: [Avatar, FormField, FormRoot, FieldError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bg-base-200 rounded-box p-4">
@@ -32,9 +33,12 @@ import { TournamentUser, WorkerAssignment } from '../data-access/dto/torneo.dto'
       <ul class="divide-base-300 divide-y">
         @for (row of rows(); track row.username) {
           <li class="flex items-center justify-between gap-2 py-2">
-            <div class="min-w-0">
-              <p class="truncate font-medium">{{ row.name || row.username }}</p>
-              <p class="text-sm opacity-70">{{ row.machine ?? 'Sin máquina asignada' }}</p>
+            <div class="flex min-w-0 items-center gap-2">
+              <app-avatar [url]="row.imageUrl" [nombre]="row.name || row.username" />
+              <div class="min-w-0">
+                <p class="truncate font-medium">{{ row.name || row.username }}</p>
+                <p class="text-sm opacity-70">{{ row.machine ?? 'Sin máquina asignada' }}</p>
+              </div>
             </div>
             @if (canManage()) {
               <button

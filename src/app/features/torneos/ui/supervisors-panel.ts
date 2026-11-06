@@ -16,10 +16,11 @@ import { ToastService } from '../../../core/toast/toast.service';
 import { FieldError } from '../../../shared/ui/field-error';
 import { TorneosApi } from '../data-access/api/torneos.api';
 import { TournamentUser } from '../data-access/dto/torneo.dto';
+import { Avatar } from '../../../shared/ui/avatar';
 
 @Component({
   selector: 'app-supervisors-panel',
-  imports: [FormField, FormRoot, FieldError],
+  imports: [Avatar, FormField, FormRoot, FieldError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bg-base-200 rounded-box p-4">
@@ -32,7 +33,10 @@ import { TournamentUser } from '../data-access/dto/torneo.dto';
       <ul class="divide-base-300 divide-y">
         @for (user of supervisors(); track user.username) {
           <li class="flex items-center justify-between gap-2 py-2">
-            <span class="truncate font-medium">{{ user.name || user.username }}</span>
+            <span class="flex min-w-0 items-center gap-2">
+              <app-avatar [url]="user.imageUrl" [nombre]="user.name || user.username" />
+              <span class="truncate font-medium">{{ user.name || user.username }}</span>
+            </span>
             @if (canManage()) {
               <button
                 type="button"

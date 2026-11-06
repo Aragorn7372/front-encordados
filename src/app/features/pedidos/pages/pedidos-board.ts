@@ -107,7 +107,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
         }
       </div>
 
-      @if (store.total() > store.pedidos().length) {
+      @if (store.total() > limite) {
         <div role="status" class="alert alert-warning alert-soft mb-4">
           Se muestran los {{ limite }} pedidos más recientes de {{ store.total() }}.
         </div>

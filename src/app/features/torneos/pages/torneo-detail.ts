@@ -11,10 +11,12 @@ import { StatusBadge } from '../../../shared/ui/status-badge';
 import { TorneosApi } from '../data-access/api/torneos.api';
 import { SupervisorsPanel } from '../ui/supervisors-panel';
 import { WorkersPanel } from '../ui/workers-panel';
+import { Avatar } from '../../../shared/ui/avatar';
 
 @Component({
   selector: 'app-torneo-detail',
   imports: [
+    Avatar,
     DatePipe,
     RouterLink,
     EmptyState,
@@ -39,8 +41,9 @@ import { WorkersPanel } from '../ui/workers-panel';
         <app-status-badge [status]="status()!" />
       </app-page-header>
 
-      <p class="mb-4">
+      <p class="mb-4 flex items-center gap-2">
         <span class="opacity-70">Propietario:</span>
+        <app-avatar [url]="data.owner.imageUrl" [nombre]="data.owner.name || data.owner.username" />
         {{ data.owner.name || data.owner.username }}
       </p>
 

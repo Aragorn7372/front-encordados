@@ -119,7 +119,7 @@ export const routes: Routes = [
         title: 'Usuarios',
         canMatch: [roleGuard],
         data: { roles: ['ADMIN', 'OWNER'], nav: { label: 'Usuarios', icon: 'usuarios' } },
-        loadComponent: enConstruccion,
+        loadComponent: () => import('./features/usuarios/pages/usuarios-page'),
       },
       {
         path: 'perfil',

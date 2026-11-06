@@ -19,6 +19,7 @@ import { PedidosApi } from '../data-access/api/pedidos.api';
 import { CambioLinea, PedidoLineas } from './pedido-lineas';
 import { PedidoEdicion } from './pedido-edicion';
 import { injectCancelarLinea, injectCancelarPedido } from './cancelar-pedido';
+import { Avatar } from '../../../shared/ui/avatar';
 
 export interface LineaActualizada {
   pedidoId: string;
@@ -27,7 +28,7 @@ export interface LineaActualizada {
 
 @Component({
   selector: 'app-pedido-detalle',
-  imports: [CurrencyPipe, DatePipe, Icon, StatusBadge, PedidoLineas, PedidoEdicion],
+  imports: [Avatar, CurrencyPipe, DatePipe, Icon, StatusBadge, PedidoLineas, PedidoEdicion],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mb-4 flex flex-wrap gap-1">
@@ -49,9 +50,23 @@ export interface LineaActualizada {
       <div class="flex gap-2">
         <dl class="grid min-w-0 flex-1 grid-cols-2 gap-x-4 gap-y-2">
           <dt class="opacity-60">Jugador</dt>
-          <dd>{{ pedido().jugador.name || pedido().jugador.username }}</dd>
+          <dd class="flex items-center gap-2">
+            <app-avatar
+              size="xs"
+              [url]="pedido().jugador.imageUrl"
+              [nombre]="pedido().jugador.name || pedido().jugador.username"
+            />
+            {{ pedido().jugador.name || pedido().jugador.username }}
+          </dd>
           <dt class="opacity-60">Encordador</dt>
-          <dd>{{ pedido().encordador.name || pedido().encordador.username }}</dd>
+          <dd class="flex items-center gap-2">
+            <app-avatar
+              size="xs"
+              [url]="pedido().encordador.imageUrl"
+              [nombre]="pedido().encordador.name || pedido().encordador.username"
+            />
+            {{ pedido().encordador.name || pedido().encordador.username }}
+          </dd>
           <dt class="opacity-60">Precio</dt>
           <dd>{{ pedido().precio | currency: 'EUR' }}</dd>
           <dt class="opacity-60">Creado</dt>

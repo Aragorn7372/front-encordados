@@ -1,17 +1,14 @@
 import { contiene } from '../../../../shared/utils/texto';
+import { emailReal, usernameReal } from '../../../../shared/utils/usuario';
 import { ContactoRequest, JugadorDto } from '../dto/jugador.dto';
 import { ContactoFormValue, Jugador } from '../model/jugador.model';
-
-/** Un ULID: 26 caracteres de Crockford base32. Es el username que el backend da a los contactos. */
-const ULID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 
 export function toJugador(dto: JugadorDto): Jugador {
   return {
     id: dto.userId,
     nombre: dto.name || dto.username,
-    username: ULID.test(dto.username) ? null : dto.username,
-    // Sin email, el backend guarda un GUID: un email de verdad siempre lleva @
-    email: dto.email?.includes('@') ? dto.email : null,
+    username: usernameReal(dto.username),
+    email: emailReal(dto.email),
     bonos: dto.bonos ?? 0,
     imagen: dto.imageUrl,
   };

@@ -91,7 +91,7 @@ type Editing = Material | null | undefined;
         </label>
       </div>
 
-      @if (store.total() > store.todos().length) {
+      @if (store.total() > limite) {
         <div role="status" class="alert alert-warning alert-soft mb-4">
           Se muestran los {{ limite }} primeros de {{ store.total() }} materiales.
         </div>

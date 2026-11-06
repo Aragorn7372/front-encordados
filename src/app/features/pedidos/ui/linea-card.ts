@@ -4,6 +4,7 @@ import { LINE_STATUS, PAYMENT_STATUS, StatusInfo } from '../../../shared/models/
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { esUrgente, lineaCancelable } from '../data-access/mapper/pedido.mapper';
 import { Columna, Cordaje, Tarjeta } from '../data-access/model/pedido.model';
+import { Avatar } from '../../../shared/ui/avatar';
 
 const SIGUIENTE: Partial<Record<Columna, { columna: Columna; label: string }>> = {
   pendiente: { columna: 'proceso', label: 'Empezar' },
@@ -30,9 +31,10 @@ const cordaje = ({ cuerda, tension, preestirado }: Cordaje) => {
 };
 
 /** Una raqueta (o artículo de taller) del tablero, con lo justo para distinguirla de las demás. */
+
 @Component({
   selector: 'app-linea-card',
-  imports: [DatePipe, StatusBadge],
+  imports: [Avatar, DatePipe, StatusBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Franja del color del pedido: separa visualmente pedidos con el mismo nº de raquetas -->
@@ -44,6 +46,7 @@ const cordaje = ({ cuerda, tension, preestirado }: Cordaje) => {
       <div class="card-body">
         <div class="flex items-start justify-between gap-2">
           <h3 class="card-title min-w-0 text-sm">
+            <app-avatar size="xs" [url]="tarjeta().pedido.jugador.imageUrl" [nombre]="nombre()" />
             <button type="button" class="link-hover truncate text-left" (click)="opened.emit()">
               {{ nombre() }}
             </button>

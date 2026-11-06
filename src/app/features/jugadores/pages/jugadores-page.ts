@@ -15,6 +15,7 @@ import { JugadoresStore } from '../data-access/store/jugadores.store';
 import { BonosForm } from '../ui/bonos-form';
 import { ContactoForm } from '../ui/contacto-form';
 import { JugadorEdicion } from '../ui/jugador-edicion';
+import { Avatar } from '../../../shared/ui/avatar';
 
 /** Lo que hay abierto en el modal. Uno solo para las tres acciones. */
 type Accion =
@@ -30,9 +31,11 @@ const TITULOS: Record<Accion['tipo'], string> = {
  * Los jugadores (contactos) del torneo activo. Lo que cada rol puede hacer lo marca el backend:
  * ENCORDER crea; OWNER además bonos y Excel; ADMIN además edita y borra.
  */
+
 @Component({
   selector: 'app-jugadores-page',
   imports: [
+    Avatar,
     BonosForm,
     ContactoForm,
     CurrencyPipe,
@@ -91,7 +94,7 @@ const TITULOS: Record<Accion['tipo'], string> = {
         </span>
       </div>
 
-      @if (store.total() > store.todos().length) {
+      @if (store.total() > limite) {
         <div role="status" class="alert alert-warning alert-soft mb-4">
           Se muestran los {{ limite }} primeros de {{ store.total() }} jugadores.
         </div>
@@ -122,10 +125,15 @@ const TITULOS: Record<Accion['tipo'], string> = {
               @for (jugador of store.jugadores(); track jugador.id) {
                 <tr>
                   <td>
-                    <div class="font-medium">{{ jugador.nombre }}</div>
-                    @if (jugador.username) {
-                      <div class="text-xs opacity-60">{{ jugador.username }}</div>
-                    }
+                    <div class="flex items-center gap-3">
+                      <app-avatar [url]="jugador.imagen" [nombre]="jugador.nombre" />
+                      <div>
+                        <div class="font-medium">{{ jugador.nombre }}</div>
+                        @if (jugador.username) {
+                          <div class="text-xs opacity-60">{{ jugador.username }}</div>
+                        }
+                      </div>
+                    </div>
                   </td>
                   <td>
                     @if (jugador.email) {

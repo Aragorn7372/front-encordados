@@ -14,6 +14,7 @@ import { coincideBusqueda } from '../data-access/mapper/pedido.mapper';
 import { Pedido } from '../data-access/model/pedido.model';
 import { PedidosStore } from '../data-access/store/pedidos.store';
 import { LineaActualizada, PedidoDetalle } from '../ui/pedido-detalle';
+import { Avatar } from '../../../shared/ui/avatar';
 
 type Resultado = 'listo' | 'entregado' | 'cancelado';
 
@@ -31,9 +32,11 @@ function resultado(pedido: Pedido): Resultado | null {
 }
 
 /** Histórico: lo ya terminado. Comparte store con el tablero, así que también se actualiza en vivo. */
+
 @Component({
   selector: 'app-terminados',
   imports: [
+    Avatar,
     CurrencyPipe,
     DatePipe,
     EmptyState,
@@ -143,18 +146,34 @@ function resultado(pedido: Pedido): Resultado | null {
               @for (pedido of filas(); track pedido.id) {
                 <tr>
                   <td>
-                    <button
-                      type="button"
-                      class="link link-hover text-left"
-                      (click)="abiertoId.set(pedido.id)"
-                    >
-                      {{ pedido.jugador.name || pedido.jugador.username }}
-                    </button>
+                    <span class="inline-flex items-center gap-2">
+                      <app-avatar
+                        size="xs"
+                        [url]="pedido.jugador.imageUrl"
+                        [nombre]="pedido.jugador.name || pedido.jugador.username"
+                      />
+                      <button
+                        type="button"
+                        class="link link-hover text-left"
+                        (click)="abiertoId.set(pedido.id)"
+                      >
+                        {{ pedido.jugador.name || pedido.jugador.username }}
+                      </button>
+                    </span>
                     @if (pedido.tipo === 'taller') {
                       <span class="badge badge-outline badge-sm ml-1">Taller</span>
                     }
                   </td>
-                  <td>{{ pedido.encordador.name || pedido.encordador.username }}</td>
+                  <td>
+                    <span class="inline-flex items-center gap-2">
+                      <app-avatar
+                        size="xs"
+                        [url]="pedido.encordador.imageUrl"
+                        [nombre]="pedido.encordador.name || pedido.encordador.username"
+                      />
+                      {{ pedido.encordador.name || pedido.encordador.username }}
+                    </span>
+                  </td>
                   <td><app-status-badge [status]="estadoInfo[pedido.estado]" /></td>
                   <td><app-status-badge [status]="pagoInfo(pedido)" /></td>
                   <td class="text-right">{{ pedido.precio | currency: 'EUR' }}</td>
