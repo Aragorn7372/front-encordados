@@ -33,7 +33,7 @@ interface Informe {
         }
         Exportar Excel
       </button>
-      @if (conImportar()) {
+      @if (conImportar() && !simple()) {
         <label
           class="btn join-item"
           [class.btn-disabled]="!tournamentId() || importando()"
@@ -91,6 +91,8 @@ export class ExcelActions {
   /** Si el servidor no propone nombre. */
   readonly nombre = input('datos.xlsx');
   readonly conImportar = input(true);
+  /** La exportación del SUPERVISOR (/api/excel/export): sin `tipos` ni importación. */
+  readonly simple = input(false);
   /** Para que la pantalla recargue lo que haya cambiado. */
   readonly importado = output<ExcelImportResult>();
 
@@ -103,7 +105,9 @@ export class ExcelActions {
     if (!torneo) return;
     this.exportando.set(true);
     try {
-      const response = await firstValueFrom(this.api.exportar(torneo, this.tipos()));
+      const response = await firstValueFrom(
+        this.simple() ? this.api.exportarSimple(torneo) : this.api.exportar(torneo, this.tipos()),
+      );
       guardarFichero(response.body!, nombreDeFichero(response, this.nombre()));
     } catch {
       // El interceptor ya ha mostrado el error

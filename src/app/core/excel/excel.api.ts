@@ -25,6 +25,15 @@ export class ExcelApi {
     });
   }
 
+  /** La única que puede usar el SUPERVISOR, y solo de su torneo: todo el torneo en un Excel. */
+  exportarSimple(tournamentId: string) {
+    return this.http.get(`/api/excel/export/${tournamentId}`, {
+      observe: 'response',
+      responseType: 'blob',
+      headers: { Accept: `${XLSX}, application/json` },
+    });
+  }
+
   /**
    * Errores silenciosos: el backend responde 403 si el torneo no es tuyo, y el interceptor
    * llevaría a la página de acceso denegado. Mejor mostrarlo en el resultado.

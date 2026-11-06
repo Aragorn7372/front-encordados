@@ -112,7 +112,7 @@ export const routes: Routes = [
           roles: ['ADMIN', 'OWNER', 'SUPERVISOR'],
           nav: { label: 'Informes', icon: 'informes' },
         },
-        loadComponent: enConstruccion,
+        loadComponent: () => import('./features/informes/pages/informes-page'),
       },
       {
         path: 'usuarios',

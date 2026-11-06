@@ -1,4 +1,9 @@
-import { LineStatus, PaymentStatus } from '../../../../shared/models/status';
+import {
+  LineStatus,
+  PaymentStatus,
+  estadoLinea,
+  estadoPedido,
+} from '../../../../shared/models/status';
 import { contiene } from '../../../../shared/utils/texto';
 import { PedidoLineaDto, PurchasedDto, StringSetupDto } from '../dto/pedido.dto';
 import { Columna, LineaPedido, Pedido, Tarjeta } from '../model/pedido.model';
@@ -7,19 +12,6 @@ import { Columna, LineaPedido, Pedido, Tarjeta } from '../model/pedido.model';
 const TALLER_MARK = 'ORDEN_DE_TALLER';
 const MATERIAL_TAG = '[MATERIAL PROPIO]';
 const CANTIDAD = /^Cant:\s*(\d+)(?:\s*\|\s*(.*))?$/s;
-
-/** Mismo orden que el enum Status del backend. */
-const ESTADOS_POR_VALOR: LineStatus[] = [
-  'PENDING',
-  'IN_PROGRESS',
-  'COMPLETED',
-  'CANCELED',
-  'DELIVERED_TOpLAYER',
-];
-
-function estadoLinea(status: LineStatus | number): LineStatus {
-  return typeof status === 'number' ? ESTADOS_POR_VALOR[status] : status;
-}
 
 const DESTINO: Record<Columna, LineStatus> = {
   pendiente: 'PENDING',
@@ -36,16 +28,6 @@ export function columnaDe(estado: LineStatus): Columna {
   if (estado === 'COMPLETED') return 'listo';
   if (estado === 'DELIVERED_TOpLAYER' || estado === 'CANCELED') return 'cerrado';
   return estado === 'PENDING' ? 'pendiente' : 'proceso';
-}
-
-/** Una línea cancelada no decide el estado del pedido mientras queden otras activas. */
-export function estadoPedido(estados: LineStatus[]): LineStatus {
-  const activas = estados.filter((estado) => estado !== 'CANCELED');
-  if (activas.length === 0) return estados.length > 0 ? 'CANCELED' : 'PENDING';
-  if (activas.every((estado) => estado === 'DELIVERED_TOpLAYER')) return 'DELIVERED_TOpLAYER';
-  if (activas.every((e) => e === 'COMPLETED' || e === 'DELIVERED_TOpLAYER')) return 'COMPLETED';
-  if (activas.every((estado) => estado === 'PENDING')) return 'PENDING';
-  return 'IN_PROGRESS';
 }
 
 function esTaller(setup: StringSetupDto | null | undefined): boolean {

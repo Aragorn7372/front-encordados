@@ -1,4 +1,4 @@
-import { LineStatus } from '../../../../shared/models/status';
+import { LineStatus, estadoPedido } from '../../../../shared/models/status';
 import { PedidoLineaDto, PurchasedDto } from '../dto/pedido.dto';
 import {
   coincideBusqueda,
@@ -11,7 +11,6 @@ import {
   toComments,
   esUrgente,
   estadoDestino,
-  estadoPedido,
   toPedido,
 } from './pedido.mapper';
 
