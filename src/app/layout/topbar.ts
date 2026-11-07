@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 import { AuthStore } from '../core/auth/store/auth.store';
 import { MeStore } from '../core/auth/store/me.store';
 import { ConfirmService } from '../core/confirm/confirm.service';
@@ -40,8 +42,10 @@ import { TournamentSwitcher } from './tournament-switcher';
         >
           <app-icon name="menu" />
         </button>
-        <app-tournament-switcher />
-        <app-precarga-estado />
+        @if (!ocultarSelector()) {
+          <app-tournament-switcher />
+          <app-precarga-estado />
+        }
       </div>
 
       @if (offline.modoSinConexion()) {
@@ -124,6 +128,21 @@ export class Topbar {
   /** El jugador no recibe el tiempo real (el hub no lo admite): no tendría nada que avisar. */
   protected readonly conCampana = computed(
     () => this.auth.isLoggedIn() && !this.auth.hasRole('USER'),
+  );
+
+  private readonly router = inject(Router);
+  /** Las pantallas de torneos lo piden en su `data`: allí el torneo se elige de la lista. */
+  protected readonly ocultarSelector = toSignal(
+    this.router.events.pipe(
+      filter((evento) => evento instanceof NavigationEnd),
+      startWith(null),
+      map(() => {
+        let ruta = this.router.routerState.snapshot.root;
+        while (ruta.firstChild) ruta = ruta.firstChild;
+        return ruta.data['ocultarSelectorTorneo'] === true;
+      }),
+    ),
+    { initialValue: false },
   );
 
   /** Los mismos roles que la ruta /escanear: el supervisor no ve pedidos. */

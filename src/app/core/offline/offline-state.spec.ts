@@ -32,17 +32,26 @@ describe('OfflineState', () => {
     expect(setup().modoSinConexion()).toBe(true);
   });
 
-  it('«Conectar» lo quita, lo olvida y recarga para pedir datos frescos', () => {
+  it('«Conectar» lo olvida y recarga para pedir datos frescos', () => {
     const estado = setup();
     estado.setModoSinConexion(true);
-    estado.servidaCopia(1000);
 
     estado.setModoSinConexion(false);
 
-    expect(estado.modoSinConexion()).toBe(false);
     expect(localStorage.getItem('etr_sin_conexion')).toBeNull();
-    expect(estado.copiaDel()).toBeNull();
     expect(reload).toHaveBeenCalled();
+    // Al recargar, la página nueva arranca ya conectada
+    TestBed.resetTestingModule();
+    expect(setup().modoSinConexion()).toBe(false);
+  });
+
+  it('la página que se va a recargar no se conecta: empezaría a enviar la cola dos veces', () => {
+    const estado = setup();
+    estado.setModoSinConexion(true);
+
+    estado.setModoSinConexion(false);
+
+    expect(estado.modoSinConexion()).toBe(true);
   });
 
   it('de varias copias, se recuerda la más antigua', () => {

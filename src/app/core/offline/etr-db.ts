@@ -30,6 +30,12 @@ export interface OperacionGuardada {
   estado: 'pendiente' | 'fallida';
   error?: string;
   intentos: number;
+  /**
+   * Cuándo salió hacia el servidor sin que llegara la respuesta (se cerró o recargó la app, o
+   * se cortó la red a medias). Para lo que no se puede repetir (crear): antes de reenviarla hay
+   * que mirar si ya llegó.
+   */
+  enviadaEn?: number;
 }
 
 /** Un id temporal que ya tiene id real: para las operaciones que lo usaban. */

@@ -52,8 +52,9 @@ export class OfflineState {
   volverAConectar(): void {
     // Guardado ya, no en un effect: la recarga llegaría antes y volvería en modo sin conexión
     guardarModo(false);
-    this.modoSinConexion.set(false);
-    this.conectado();
+    // La señal NO se cambia aquí: en el instante antes de descargarse, esta página empezaría a
+    // enviar la cola, y la nueva la volvería a enviar (un pedido creado dos veces). La conexión
+    // la activa la página que carga, que ya lee el modo guardado
     this.doc.defaultView?.location.reload();
   }
 

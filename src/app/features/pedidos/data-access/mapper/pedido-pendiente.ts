@@ -54,6 +54,36 @@ const firma = (linea: LineaPedido) =>
  * contenido, no por posición: nada garantiza que el servidor las devuelva en el mismo orden.
  * Dos raquetas idénticas son intercambiables.
  */
+/** Los relojes del móvil y del servidor no coinciden del todo. */
+const MARGEN_RELOJ_MS = 2 * 60 * 1000;
+
+/**
+ * Un pedido creado sin conexión que salió hacia el servidor sin que volviera la respuesta: si
+ * llegó, está en el servidor con el mismo jugador, encordador y raquetas, creado después de
+ * salir. null si no está (y entonces sí hay que enviarlo). Uno ya adoptado por otra creación
+ * no cuenta: dos pedidos iguales seguidos son dos pedidos.
+ */
+export function buscarCreado(
+  pedidos: Pedido[],
+  { request, vista }: CrearPedido,
+  { desde, usados }: { desde: number; usados: ReadonlySet<string> },
+): Pedido | null {
+  const raquetas = (p: Pedido) => p.lineas.map(firma).sort().join('\n');
+  const buscadas = raquetas(toPedido(vista));
+  const candidatos = pedidos
+    .filter(
+      (p) =>
+        !usados.has(p.id) &&
+        p.jugador.username === request.playerName &&
+        p.encordador.username === request.assignedToName &&
+        new Date(p.creadoEn).getTime() >= desde - MARGEN_RELOJ_MS &&
+        raquetas(p) === buscadas,
+    )
+    // El primero creado después de salir: el que hizo esta operación
+    .sort((a, b) => new Date(a.creadoEn).getTime() - new Date(b.creadoEn).getTime());
+  return candidatos[0] ?? null;
+}
+
 export function idsCreados({ tempId, vista }: CrearPedido, real: Pedido): Record<string, string> {
   const ids: Record<string, string> = { [tempId]: real.id };
   const libres = [...real.lineas];

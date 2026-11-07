@@ -1,0 +1,93 @@
+# El front (PWA) servido por nginx. Delante va el nginx de docker-compose, que pone https y
+# manda /api y /hub al backend: aquí solo se sirven ficheros.
+#
+# Lo importante es la caché:
+# - Lo que lleva hash en el nombre no cambia nunca: un año.
+# - index.html, ngsw.json y ngsw-worker.js deciden qué versión se usa: siempre se revalidan,
+#   o el service worker no vería las actualizaciones.
+# - config.json se genera al arrancar: nunca se guarda.
+# No hay «kill-switch» del service worker (el front antiguo lo tenía): desinstalaría la PWA.
+#
+# Es una plantilla: al arrancar, la imagen de nginx sustituye ${PORT} (y solo esa variable,
+# ver NGINX_ENVSUBST_FILTER en el Dockerfile; las de nginx como $uri no se tocan).
+
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    server_tokens off;
+
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_types text/plain text/css application/json application/javascript application/wasm
+               application/manifest+json image/svg+xml;
+
+    include /etc/nginx/snippets/cabeceras.conf;
+
+    # Comprobación de salud (docker-compose y el HEALTHCHECK de la imagen)
+    location = /health {
+        access_log off;
+        default_type text/plain;
+        return 200 'ok';
+    }
+
+    # Generado al arrancar con la URL de la API
+    location = /config.json {
+        include /etc/nginx/snippets/cabeceras.conf;
+        add_header Cache-Control "no-store" always;
+        try_files $uri =404;
+    }
+
+    # Los que deciden la versión de la app: siempre se revalidan
+    location ~ ^/(index\.html|ngsw\.json|ngsw-worker\.js|safety-worker\.js|worker-basic\.min\.js)$ {
+        include /etc/nginx/snippets/cabeceras.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    location = /manifest.webmanifest {
+        include /etc/nginx/snippets/cabeceras.conf;
+        add_header Cache-Control "no-cache" always;
+        default_type application/manifest+json;
+        try_files $uri =404;
+    }
+
+    # El lector de códigos (WebAssembly): sin hash en el nombre, se revalida
+    location ^~ /zxing/ {
+        include /etc/nginx/snippets/cabeceras.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    # /api y /hub los atiende el backend a través del proxy. Si alguna llega aquí, un 404
+    # claro: nunca el index.html (la app lo intentaría leer como JSON)
+    location ~ ^/(api|hub)(/|$) {
+        return 404;
+    }
+
+    # Con hash en el nombre (main-ZXW3LAAP.js, chunk-DzIcrGeS.js, styles-3YCLCS3W.css…)
+    location ~* "-[A-Za-z0-9]{8,}\.(js|css|woff2?|ttf|otf|png|jpe?g|gif|webp|avif|svg|ico)$" {
+        include /etc/nginx/snippets/cabeceras.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # Iconos y demás ficheros sin hash: un día
+    location ~* \.(png|jpe?g|gif|webp|avif|svg|ico|woff2?|ttf|otf)$ {
+        include /etc/nginx/snippets/cabeceras.conf;
+        add_header Cache-Control "public, max-age=86400" always;
+        try_files $uri =404;
+    }
+
+    # La app: cualquier otra ruta (/pedidos, /escanear…) es el index.html
+    location / {
+        include /etc/nginx/snippets/cabeceras.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri $uri/ /index.html;
+    }
+}

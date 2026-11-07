@@ -1,0 +1,12 @@
+# Lo que no debe entrar en la imagen: se instala o se compila dentro
+node_modules
+dist
+.angular
+out-tsc
+coverage
+# Ni lo personal o del editor
+.git
+.vscode
+.idea
+plan.md
+*.log

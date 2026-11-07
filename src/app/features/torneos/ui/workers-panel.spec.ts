@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
@@ -26,6 +27,7 @@ describe('WorkersPanel', () => {
   const render = async (canManage: boolean) => {
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         { provide: TorneosApi, useValue: api },
         { provide: ConfirmService, useValue: confirm },
       ],
@@ -97,5 +99,13 @@ describe('WorkersPanel', () => {
     await fixture.whenStable();
 
     expect(api.removeWorker).not.toHaveBeenCalled();
+  });
+
+  it('quien gestiona el torneo puede ir a los pedidos de cada encordador en ese torneo', async () => {
+    await render(true);
+    const enlace = fixture.nativeElement.querySelector(
+      'a[aria-label^="Pedidos de"]',
+    ) as HTMLAnchorElement | null;
+    expect(enlace?.getAttribute('href')).toMatch(/^\/pedidos\?torneo=t1&encordador=/);
   });
 });

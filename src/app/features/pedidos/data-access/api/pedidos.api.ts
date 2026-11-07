@@ -2,6 +2,7 @@ import { HttpClient, HttpContext, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { forkJoin, map, of } from 'rxjs';
 import { SILENT_ERRORS } from '../../../../core/http/error.interceptor';
+import { SIN_COPIA } from '../../../../core/offline/cache.interceptor';
 import { PageResponse, toPageParams } from '../../../../shared/models/page';
 import { LineStatus } from '../../../../shared/models/status';
 import { PedidoLineaDto, PurchasedDto } from '../dto/pedido.dto';
@@ -64,7 +65,8 @@ export interface PedidosPage {
 export class PedidosApi {
   private readonly http = inject(HttpClient);
 
-  list(tournamentId: string | null) {
+  /** `fresco`: del servidor sí o sí, nunca de la copia guardada (para comprobar algo). */
+  list(tournamentId: string | null, { fresco = false } = {}) {
     let params = toPageParams({
       page: 0,
       size: TABLERO_MAX,
@@ -73,7 +75,8 @@ export class PedidosApi {
     });
     if (tournamentId) params = params.set('tournamentId', tournamentId);
 
-    return this.http.get<PageResponse<PurchasedDto>>(BASE, { params }).pipe(
+    const context = new HttpContext().set(SIN_COPIA, fresco);
+    return this.http.get<PageResponse<PurchasedDto>>(BASE, { params, context }).pipe(
       map((page): PedidosPage => ({
         pedidos: page.content.map(toPedido),
         total: page.totalElements,

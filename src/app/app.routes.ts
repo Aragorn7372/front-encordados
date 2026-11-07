@@ -93,6 +93,8 @@ export const routes: Routes = [
         data: {
           roles: ['ADMIN', 'OWNER', 'ENCORDER'],
           nav: { label: 'Torneos', icon: 'torneos' },
+          // Aquí se elige el torneo de la lista: el selector de arriba solo confundiría
+          ocultarSelectorTorneo: true,
         },
         loadComponent: () => import('./features/torneos/pages/torneos-list'),
       },
@@ -100,7 +102,7 @@ export const routes: Routes = [
         path: 'torneos/:id',
         title: 'Torneo',
         canMatch: [roleGuard],
-        data: { roles: ['ADMIN', 'OWNER', 'ENCORDER'] },
+        data: { roles: ['ADMIN', 'OWNER', 'ENCORDER'], ocultarSelectorTorneo: true },
         loadComponent: () => import('./features/torneos/pages/torneo-detail'),
       },
       {

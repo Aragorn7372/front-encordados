@@ -1,7 +1,8 @@
+import { map } from 'rxjs';
 import { ManejadorOutbox, definirManejador } from '../../core/offline/outbox';
 import { PedidosApi } from './data-access/api/pedidos.api';
 import { PedidoLineaDto } from './data-access/dto/pedido.dto';
-import { idsCreados } from './data-access/mapper/pedido-pendiente';
+import { buscarCreado, idsCreados } from './data-access/mapper/pedido-pendiente';
 import {
   CancelarLinea,
   CancelarPedido,
@@ -20,6 +21,11 @@ export const pedidosManejadores: ManejadorOutbox[] = [
     enviar: (api, { request }) => api.create(request),
     crea: ({ tempId }) => tempId,
     idsCreados,
+    // Si se cortó a medias (recarga, cierre, red), mirar en el servidor antes de crearlo otra vez
+    comprobar: (api, payload, contexto) =>
+      api
+        .list(payload.request.tournamentId, { fresco: true })
+        .pipe(map(({ pedidos }) => buscarCreado(pedidos, payload, contexto))),
   }),
   definirManejador<PedidosApi, EstadoLinea, PedidoLineaDto>({
     tipo: OP_PEDIDO.estadoLinea,

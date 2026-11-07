@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import {
   ChangeDetectionStrategy,
@@ -21,7 +22,7 @@ import { Avatar } from '../../../shared/ui/avatar';
 
 @Component({
   selector: 'app-workers-panel',
-  imports: [RequiereConexion, Avatar, FormField, FormRoot, FieldError],
+  imports: [RequiereConexion, RouterLink, Avatar, FormField, FormRoot, FieldError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bg-base-200 rounded-box p-4">
@@ -42,6 +43,14 @@ import { Avatar } from '../../../shared/ui/avatar';
               </div>
             </div>
             @if (canManage()) {
+              <a
+                class="btn btn-ghost btn-sm"
+                routerLink="/pedidos"
+                [queryParams]="{ torneo: tournamentId(), encordador: row.username }"
+                [attr.aria-label]="'Pedidos de ' + (row.name || row.username)"
+              >
+                Pedidos
+              </a>
               <button
                 type="button"
                 class="btn btn-ghost btn-sm"

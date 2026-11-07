@@ -42,6 +42,10 @@ const estadoDe = (error: unknown): number => {
   return typeof status === 'number' ? status : -1;
 };
 
+/** Una creación sin forma de comprobar si llegó: no se repite a ciegas. */
+export const NO_SE_SABE =
+  'Salió hacia el servidor y no se sabe si llegó. Compruébalo antes de reintentarlo, o se haría dos veces.';
+
 const aAppError = (error: unknown): AppError =>
   error instanceof HttpErrorResponse ? toAppError(error) : (error as AppError);
 
@@ -139,6 +143,7 @@ export class OutboxService {
       return encolar();
     }
 
+    const salida = Date.now();
     try {
       let peticion = this.enviar(manejador, sustituirIds(payload, this.ids()));
       if (manejador.idempotente) {
@@ -155,6 +160,11 @@ export class OutboxService {
         this.offline.sinRed();
         // Acaba de fallar: no se reintenta en el acto, sino con la espera de siempre
         this.programarReintento();
+        // Salió hacia el servidor: puede haber llegado aunque no volviera la respuesta
+        if (!manejador.idempotente) {
+          await this.encolar(tipo, payload, descripcion, salida);
+          return { enviada: false };
+        }
         return encolar();
       }
       if (status === 401) {
@@ -175,7 +185,7 @@ export class OutboxService {
    * se toma antes de cualquier await, o dos envíos crearían el mismo pedido dos veces.
    */
   sincronizar(): Promise<void> {
-    this.envio ??= this.vaciar()
+    this.envio ??= this.conCandado(() => this.vaciar())
       .catch(() => undefined) // Que un error inesperado no deje el candado cogido
       .then(() => {
         this.envio = null;
@@ -183,6 +193,17 @@ export class OutboxService {
         if (this.puede() && !this.reintento && this.pendientes().length) void this.sincronizar();
       });
     return this.envio;
+  }
+
+  /**
+   * Entre pestañas (o la app instalada y una pestaña) también: con Web Locks solo una envía la
+   * cola a la vez; la otra espera y, al entrar, relee la cola, que ya estará vacía.
+   */
+  private conCandado(enviar: () => Promise<void>): Promise<void> {
+    const locks = globalThis.navigator?.locks;
+    const userId = this.auth.userId();
+    if (!locks?.request || !userId) return enviar();
+    return locks.request(`etr-outbox-${userId}`, () => enviar());
   }
 
   private async vaciar(): Promise<void> {
@@ -193,8 +214,10 @@ export class OutboxService {
       this.programarReintento();
       return;
     }
-    if (!this.puede() || this.pendientes().length === 0) return;
     const db = await this.offlineDb.db();
+    // Lo que hay en memoria puede estar viejo: otra pestaña ha podido enviarlo ya
+    await this.releer(db);
+    if (!this.puede() || this.pendientes().length === 0) return;
     this.cancelarReintento();
     this.enviando.set(true);
     let enviadas = 0;
@@ -231,18 +254,23 @@ export class OutboxService {
       return 'fallida';
     }
     try {
-      const respuesta = await firstValueFrom(this.enviar(manejador, payload));
-      const nuevos = manejador.idsCreados?.(op.payload, respuesta) ?? {};
-      if (Object.keys(nuevos).length) {
-        const filas = Object.entries(nuevos).map(([tmp, real]) => ({ tmp, real }));
-        await db?.ids.bulkPut(filas).catch(() => undefined);
-        this.ids.update((ids) => ({ ...ids, ...nuevos }));
+      if (!manejador.idempotente) {
+        // Ya salió una vez y no se sabe si llegó: antes de repetirla, mirar si ya está
+        if (op.enviadaEn !== undefined) {
+          if (!manejador.comprobar) {
+            await this.marcarFallida(op, NO_SE_SABE);
+            return 'fallida';
+          }
+          const ya = await firstValueFrom(this.comprobar(manejador, payload, op.enviadaEn));
+          if (ya !== null) return this.exito(op, payload, ya, db);
+        } else {
+          // Se apunta ANTES de enviarla: si la app se cierra o recarga a medias, quien la
+          // retome sabrá que tiene que comprobar
+          op = await this.actualizar(op, { enviadaEn: Date.now() });
+        }
       }
-      // Primero se aplica la respuesta y luego sale de la cola: así no parpadea
-      this.enviadas.next({ operacion: { ...op, payload }, respuesta });
-      await this.quitar([op]);
-      this.fallosSeguidos = 0;
-      return 'enviada';
+      const respuesta = await firstValueFrom(this.enviar(manejador, payload));
+      return this.exito(op, payload, respuesta, db);
     } catch (error) {
       const status = estadoDe(error);
       // Sin red o sin sesión: se queda pendiente, igual que todo lo que va detrás
@@ -251,13 +279,46 @@ export class OutboxService {
         this.programarReintento();
         return 'parar';
       }
-      await this.marcarFallida(op, aAppError(error).message);
+      // El servidor la ha rechazado: no se creó nada, ya no hay duda
+      await this.marcarFallida({ ...op, enviadaEn: undefined }, aAppError(error).message);
       return 'fallida';
     }
   }
 
+  private async exito(
+    op: Operacion,
+    payload: unknown,
+    respuesta: unknown,
+    db: EtrDb | null,
+  ): Promise<'enviada'> {
+    const nuevos = this.manejadores.get(op.tipo)?.idsCreados?.(op.payload, respuesta) ?? {};
+    if (Object.keys(nuevos).length) {
+      const filas = Object.entries(nuevos).map(([tmp, real]) => ({ tmp, real }));
+      await db?.ids.bulkPut(filas).catch(() => undefined);
+      this.ids.update((ids) => ({ ...ids, ...nuevos }));
+    }
+    // Primero se aplica la respuesta y luego sale de la cola: así no parpadea
+    this.enviadas.next({ operacion: { ...op, payload }, respuesta });
+    await this.quitar([op]);
+    this.fallosSeguidos = 0;
+    return 'enviada';
+  }
+
+  private comprobar(
+    manejador: ManejadorOutbox,
+    payload: unknown,
+    desde: number,
+  ): Observable<unknown> {
+    const fondo = this.fondo!;
+    const usados = new Set(Object.values(this.ids()));
+    return runInInjectionContext(fondo, () =>
+      manejador.comprobar!(fondo.get(manejador.api), payload, { desde, usados }),
+    );
+  }
+
+  /** Reintentar a mano es decidir que hay que enviarla: se quita la duda. */
   async reintentar(op: Operacion): Promise<void> {
-    await this.actualizar(op, { estado: 'pendiente', error: undefined });
+    await this.actualizar(op, { estado: 'pendiente', error: undefined, enviadaEn: undefined });
     await this.sincronizar();
   }
 
@@ -317,7 +378,12 @@ export class OutboxService {
     );
   }
 
-  private async encolar(tipo: string, payload: unknown, descripcion: string): Promise<void> {
+  private async encolar(
+    tipo: string,
+    payload: unknown,
+    descripcion: string,
+    enviadaEn?: number,
+  ): Promise<void> {
     const op: Operacion = {
       tipo,
       payload,
@@ -325,6 +391,7 @@ export class OutboxService {
       creadaEn: Date.now(),
       estado: 'pendiente',
       intentos: 0,
+      ...(enviadaEn === undefined ? {} : { enviadaEn }),
     };
     const db = await this.offlineDb.db();
     // Sin IndexedDB (modo privado) la cola vive solo mientras la app esté abierta
@@ -337,11 +404,26 @@ export class OutboxService {
     await this.actualizar(op, { estado: 'fallida', error, intentos: op.intentos + 1 });
   }
 
-  private async actualizar(op: Operacion, cambios: Partial<Operacion>): Promise<void> {
+  private async actualizar(op: Operacion, cambios: Partial<Operacion>): Promise<Operacion> {
     const nueva = { ...op, ...cambios };
     const db = await this.offlineDb.db();
     if (op.id && op.id > 0) await db?.outbox.put(nueva).catch(() => undefined);
     this.operaciones.update((ops) => ops.map((o) => (o.id === op.id ? nueva : o)));
+    return nueva;
+  }
+
+  /** La cola tal como está en IndexedDB (la que vale entre pestañas y recargas). */
+  private async releer(db: EtrDb | null): Promise<void> {
+    if (!db) return;
+    try {
+      const [ops, ids] = await Promise.all([db.outbox.toArray(), db.ids.toArray()]);
+      // Las que no se pudieron guardar (sin IndexedDB) solo existen en memoria
+      const soloMemoria = this.operaciones().filter((o) => !o.id || o.id < 0);
+      this.operaciones.set([...ops, ...soloMemoria]);
+      this.ids.set(Object.fromEntries(ids.map(({ tmp, real }) => [tmp, real])));
+    } catch {
+      // Sin poder leerla, vale lo que hay en memoria
+    }
   }
 
   private async quitar(ops: Operacion[]): Promise<void> {

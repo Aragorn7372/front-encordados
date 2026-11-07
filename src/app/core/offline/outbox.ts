@@ -62,6 +62,20 @@ export interface ManejadorOutbox<A = unknown, P = unknown, R = unknown> {
    * sin esperar. Crear no lo es: si la respuesta se pierde, repetirla duplicaría el pedido.
    */
   idempotente?: boolean;
+  /**
+   * Para lo que no es idempotente: si salió hacia el servidor y no se sabe si llegó, busca en
+   * el servidor lo que habría creado. Lo encontrado se toma como su respuesta (y no se repite);
+   * null si no está y hay que enviarla. Sin `comprobar`, no se reenvía a ciegas: queda fallida
+   * para que el usuario lo mire.
+   */
+  comprobar?(api: A, payload: P, contexto: ContextoComprobacion): Observable<R | null>;
+}
+
+export interface ContextoComprobacion {
+  /** Cuándo salió por primera vez: lo creado antes no puede ser suyo. */
+  desde: number;
+  /** Ids reales que ya son de otras creaciones: no se pueden adoptar dos veces. */
+  usados: ReadonlySet<string>;
 }
 
 /** Con sus tipos, para que `enviar` sepa qué cliente y qué payload recibe. */

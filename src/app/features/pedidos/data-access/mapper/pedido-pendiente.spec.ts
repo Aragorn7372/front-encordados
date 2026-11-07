@@ -1,6 +1,12 @@
 import { PedidoLineaDto, PurchasedDto } from '../dto/pedido.dto';
 import { OP_PEDIDO } from '../model/pedido-operacion.model';
-import { aplicarPendientes, describir, idsCreados, vistaPrevia } from './pedido-pendiente';
+import {
+  aplicarPendientes,
+  buscarCreado,
+  describir,
+  idsCreados,
+  vistaPrevia,
+} from './pedido-pendiente';
 import { toPedido } from './pedido.mapper';
 import { PurchasedRequest } from './pedido-request';
 
@@ -196,5 +202,37 @@ describe('describir', () => {
       '«Pure Aero» de Ana: Listo',
     );
     expect(describir.cancelarLinea(pedido, pedido.lineas[0])).toBe('Cancelar «Pure Aero» de Ana');
+  });
+});
+
+describe('buscarCreado (un pedido que salió y no se sabe si llegó)', () => {
+  const vista = vistaPrevia(request, 'tmp-1', ana, carlos);
+  const payload = { tempId: 'tmp-1', request, vista };
+  const desde = Date.parse('2026-11-07T16:00:00Z');
+  const enServidor = (id: string, creado: string, raquetas = ['Pure Aero', 'Blade']) => ({
+    ...servidor(
+      id,
+      raquetas.map((r, i) => ({ id: `${id}-${i}`, raquetModel: r })),
+    ),
+    creadoEn: creado,
+  });
+
+  it('lo encuentra si está: mismo jugador, encordador y raquetas, creado después de salir', () => {
+    const real = enServidor('P2', '2026-11-07T16:00:01Z');
+    expect(
+      buscarCreado([enServidor('P1', '2026-11-06T10:00:00Z'), real], payload, {
+        desde,
+        usados: new Set(),
+      }),
+    ).toBe(real);
+  });
+
+  it('no confunde un pedido anterior, otro con otras raquetas ni uno ya adoptado', () => {
+    const anterior = enServidor('P1', '2026-11-07T15:00:00Z');
+    const otras = enServidor('P3', '2026-11-07T16:00:02Z', ['Speed']);
+    const adoptado = enServidor('P4', '2026-11-07T16:00:03Z');
+    expect(
+      buscarCreado([anterior, otras, adoptado], payload, { desde, usados: new Set(['P4']) }),
+    ).toBeNull();
   });
 });

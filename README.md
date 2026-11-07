@@ -1,5 +1,26 @@
 # FrontEncordados
 
+## Desplegar (imagen Docker)
+
+La imagen no necesita *build args*: se configura con variables de entorno al arrancar, igual en
+`docker compose`, en un `docker run` o en una plataforma de contenedores (Render, Railway,
+Fly.io, Google Cloud Run…).
+
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `API_URL` | *(vacía)* | URL de la API y del hub de tiempo real, sin barra final. Vacía = el mismo dominio que el front (detrás de un proxy que mande `/api` y `/hub` al backend). Si es otro dominio, el backend tiene que permitirlo en CORS (`Cors__AllowedOrigins__N`). |
+| `PORT` | `80` | Puerto en el que escucha nginx. Muchas plataformas lo eligen y lo pasan así. |
+
+```bash
+docker build -t encordados-front .
+docker run -p 8080:8080 -e PORT=8080 -e API_URL=https://api.ejemplo.com encordados-front
+```
+
+Comprobación de salud: `GET /health` → `ok`. La configuración que ha leído: `GET /config.json`.
+
+Las plataformas de sitios estáticos (Netlify, Vercel…) **no usan el Dockerfile**: compilan y
+sirven los ficheros. Ahí `config.json` y las cabeceras se configuran aparte.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.1.
 
 ## Development server
