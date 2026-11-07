@@ -11,10 +11,12 @@ import {
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthStore } from '../../../core/auth/store/auth.store';
+import { OfflineState } from '../../../core/offline/offline-state';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { TournamentContext } from '../../../core/tournament-context/tournament-context';
 import { PAYMENT_STATUS, PaymentStatus } from '../../../shared/models/status';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { EmptyState } from '../../../shared/ui/empty-state';
 import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
@@ -23,6 +25,8 @@ import { coincideTarjeta, tarjetasDe } from '../data-access/mapper/pedido.mapper
 import { COLUMNAS, Columna, Pedido, Tarjeta } from '../data-access/model/pedido.model';
 import { JugadorOpcion, PedidosApi, TABLERO_MAX } from '../data-access/api/pedidos.api';
 import { PedidosStore } from '../data-access/store/pedidos.store';
+import { PedidoCreado } from '../data-access/store/pedidos-escrituras';
+import { esTemporal } from '../../../core/offline/outbox';
 import { KanbanColumn, TarjetaMovida } from '../ui/kanban-column';
 import { LineaActualizada, PedidoDetalle } from '../ui/pedido-detalle';
 import { PedidoForm } from '../ui/pedido-form';
@@ -47,6 +51,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
 @Component({
   selector: 'app-pedidos-board',
   imports: [
+    SinDatos,
     CdkDropListGroup,
     EmptyState,
     KanbanColumn,
@@ -114,10 +119,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
       }
 
       @if (store.failed()) {
-        <app-empty-state
-          heading="No se han podido cargar los pedidos"
-          message="Inténtalo de nuevo en unos segundos."
-        />
+        <app-sin-datos que="pedidos" />
       } @else {
         <div
           class="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
@@ -131,6 +133,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
               [tarjetas]="porColumna()[columna.id]"
               [readonly]="readonly()"
               [puedeRepetir]="puedeCrear()"
+              [sinEnviar]="store.sinEnviar()"
               (movida)="onMoved($event)"
               (abierta)="abrir($event.pedido.id)"
               (repetir)="repetir($event.pedido)"
@@ -184,6 +187,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
 export default class PedidosBoard {
   protected readonly store = inject(PedidosStore);
   private readonly realtime = inject(RealtimeService);
+  private readonly offline = inject(OfflineState);
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(PedidosApi);
   private readonly auth = inject(AuthStore);
@@ -211,7 +215,9 @@ export default class PedidosBoard {
   private readonly fuera = rxResource({
     params: () => {
       const id = this.abiertoId();
-      return id && !this.store.pedidos().some((p) => p.id === id) ? id : undefined;
+      // Uno creado sin conexión solo existe aquí: el servidor no lo conoce todavía
+      if (!id || esTemporal(id) || this.store.pedidos().some((p) => p.id === id)) return undefined;
+      return id;
     },
     stream: ({ params }) => this.api.get(params),
   });
@@ -251,7 +257,7 @@ export default class PedidosBoard {
 
   /** La vista de jugador no usa tiempo real: el estado del hub no le dice nada. */
   protected readonly showOffline = computed(
-    () => !this.readonly() && this.realtime.status() !== 'on',
+    () => !this.readonly() && !this.offline.modoSinConexion() && this.realtime.status() !== 'on',
   );
 
   /** Una tarjeta por raqueta: así se ve qué raqueta está en qué punto. */
@@ -296,12 +302,17 @@ export default class PedidosBoard {
 
   /** La tarjeta es una raqueta: se cancela esa; el pedido entero, desde el detalle. */
   protected async cancelarLinea({ pedido, linea }: Tarjeta): Promise<void> {
-    const actualizada = await this.cancelarLineaPedido(linea);
+    const actualizada = await this.cancelarLineaPedido(pedido, linea);
     if (actualizada) this.store.applyLine(pedido.id, actualizada);
   }
 
-  protected onCreado(pedido: Pedido): void {
+  protected onCreado({ pedido, enviado }: PedidoCreado): void {
     this.creando.set(false);
+    if (!enviado) {
+      // Ya está en el tablero (lo pone la cola), marcado «Sin enviar»
+      this.toast.warning('Sin conexión: el pedido se ha guardado y se enviará al recuperarla');
+      return;
+    }
     this.store.applyChange(pedido);
     // En «Mis asignados» no se verá si es de otro: que no parezca que se ha perdido
     const otro = pedido.encordador.username !== this.auth.username();

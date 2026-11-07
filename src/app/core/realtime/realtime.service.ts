@@ -1,6 +1,7 @@
 import { Injectable, InjectionToken, effect, inject, signal } from '@angular/core';
 import type { HubConnection } from '@microsoft/signalr';
 import { Subject } from 'rxjs';
+import { OfflineState } from '../offline/offline-state';
 import { AuthStore } from '../auth/store/auth.store';
 import { APP_CONFIG } from '../config/app-config';
 import { RealtimeStatus, TournamentNotification } from './realtime.models';
@@ -33,6 +34,7 @@ export const HUB_FACTORY = new InjectionToken<HubFactory>('HUB_FACTORY', {
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
   private readonly auth = inject(AuthStore);
+  private readonly offline = inject(OfflineState);
   private readonly config = inject(APP_CONFIG);
   private readonly createHub = inject(HUB_FACTORY);
 
@@ -49,6 +51,8 @@ export class RealtimeService {
     effect((onCleanup) => {
       const token = this.auth.token();
       if (!token || this.auth.hasRole('USER')) return; // El hub no admite a USER
+      // Modo sin conexión elegido por el usuario: tampoco tiempo real
+      if (this.offline.modoSinConexion()) return;
 
       let stopped = false;
       let retry: ReturnType<typeof setTimeout> | undefined;

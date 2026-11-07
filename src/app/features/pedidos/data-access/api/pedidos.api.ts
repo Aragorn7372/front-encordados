@@ -3,11 +3,11 @@ import { Injectable, inject } from '@angular/core';
 import { forkJoin, map, of } from 'rxjs';
 import { SILENT_ERRORS } from '../../../../core/http/error.interceptor';
 import { PageResponse, toPageParams } from '../../../../shared/models/page';
-import { LineStatus, PaymentStatus } from '../../../../shared/models/status';
+import { LineStatus } from '../../../../shared/models/status';
 import { PedidoLineaDto, PurchasedDto } from '../dto/pedido.dto';
-import { toComments, toPedido } from '../mapper/pedido.mapper';
-import { PurchasedRequest } from '../mapper/pedido-request';
-import { Pedido } from '../model/pedido.model';
+import { toPedido } from '../mapper/pedido.mapper';
+import { CuerpoCambios, PurchasedRequest, cuerpoCambios } from '../mapper/pedido-request';
+import { CambiosPedido, Pedido } from '../model/pedido.model';
 
 const BASE = '/api/purchased';
 /** El tablero necesita todos los pedidos a la vez, no se puede paginar por columnas. */
@@ -50,11 +50,7 @@ interface AsignacionDto {
   user: UsuarioDto;
 }
 
-export interface CambiosPedido {
-  maquina: string;
-  pago: PaymentStatus;
-  comentarios: string;
-}
+export type { CambiosPedido } from '../model/pedido.model';
 
 /** Los formularios pintan sus errores en línea. */
 const silent = () => ({ context: new HttpContext().set(SILENT_ERRORS, true) });
@@ -140,19 +136,14 @@ export class PedidosApi {
     return this.http.get<PurchasedDto>(`${BASE}/${id}`).pipe(map(toPedido));
   }
 
-  /**
-   * PUT y no change-payment-status: PUT emite PEDIDO_ACTUALIZADO y el cambio de pago llega en
-   * vivo a otros tableros. Solo se envía lo que cambia: el backend rechaza comentarios vacíos.
-   */
+  /** Editar desde el detalle: solo lo que cambia (ver cuerpoCambios). */
   update(pedido: Pedido, cambios: CambiosPedido) {
-    const body: Record<string, string> = {};
-    if (cambios.maquina.trim() !== pedido.maquina) body['machine'] = cambios.maquina.trim();
-    if (cambios.pago !== pedido.pago) body['payStatus'] = cambios.pago;
-    const comments = toComments(cambios.comentarios, pedido.materialPropio);
-    if (comments && comments !== toComments(pedido.comentarios, pedido.materialPropio)) {
-      body['comments'] = comments;
-    }
-    return this.http.put<PurchasedDto>(`${BASE}/${pedido.id}`, body, silent()).pipe(map(toPedido));
+    return this.put(pedido.id, cuerpoCambios(pedido, cambios));
+  }
+
+  /** El cuerpo ya calculado: la cola lo guarda así, sin depender del pedido de entonces. */
+  put(id: string, cuerpo: CuerpoCambios) {
+    return this.http.put<PurchasedDto>(`${BASE}/${id}`, cuerpo, silent()).pipe(map(toPedido));
   }
 
   changeLineStatus(lineaId: string, status: LineStatus) {

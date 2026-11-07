@@ -72,3 +72,10 @@ export interface Tarjeta {
   numero: number;
   total: number;
 }
+
+/** Lo que se puede editar de un pedido desde el detalle. */
+export interface CambiosPedido {
+  maquina: string;
+  pago: PaymentStatus;
+  comentarios: string;
+}

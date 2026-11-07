@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideEscriturasDirectas } from '../data-access/store/pedidos-escrituras.testing';
 import { of, throwError } from 'rxjs';
 import { Pedido } from '../data-access/model/pedido.model';
 import { PedidosApi } from '../data-access/api/pedidos.api';
@@ -15,12 +16,14 @@ const pedido = {
 describe('PedidoEdicion', () => {
   const api = { update: vi.fn(() => of({ ...pedido, pago: 'PAID' })) };
   let fixture: ComponentFixture<PedidoEdicion>;
-  let saved: Pedido[];
+  let saved: (Pedido | null)[];
 
   const element = () => fixture.nativeElement as HTMLElement;
 
   const render = async () => {
-    TestBed.configureTestingModule({ providers: [{ provide: PedidosApi, useValue: api }] });
+    TestBed.configureTestingModule({
+      providers: [{ provide: PedidosApi, useValue: api }, provideEscriturasDirectas(api)],
+    });
     fixture = TestBed.createComponent(PedidoEdicion);
     fixture.componentRef.setInput('pedido', pedido);
     saved = [];
@@ -52,7 +55,7 @@ describe('PedidoEdicion', () => {
     await submit();
 
     expect(api.update).toHaveBeenCalledWith(pedido, expect.objectContaining({ pago: 'PAID' }));
-    expect(saved[0].pago).toBe('PAID');
+    expect(saved[0]?.pago).toBe('PAID');
   });
 
   it('Cancelar avisa sin guardar', async () => {

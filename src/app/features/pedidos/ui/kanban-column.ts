@@ -36,6 +36,7 @@ export interface TarjetaMovida {
             [tarjeta]="tarjeta"
             [readonly]="readonly()"
             [canRepeat]="puedeRepetir()"
+            [sinEnviar]="sinEnviar().has(tarjeta.pedido.id)"
             (moved)="movida.emit({ tarjeta, columna: $event })"
             (opened)="abierta.emit(tarjeta)"
             (repeat)="repetir.emit(tarjeta)"
@@ -54,6 +55,8 @@ export class KanbanColumn {
   readonly tarjetas = input.required<Tarjeta[]>();
   readonly readonly = input(false);
   readonly puedeRepetir = input(false);
+  /** Pedidos con cambios en la cola, aún sin llegar al servidor. */
+  readonly sinEnviar = input<ReadonlySet<string>>(new Set());
   readonly movida = output<TarjetaMovida>();
   readonly abierta = output<Tarjeta>();
   readonly repetir = output<Tarjeta>();

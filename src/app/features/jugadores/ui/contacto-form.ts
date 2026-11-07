@@ -9,14 +9,12 @@ import {
   validate,
 } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
+import { esEmail, opcional } from '../../../shared/utils/validacion';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
 import { JugadoresApi } from '../data-access/api/jugadores.api';
 import { toContactoRequest } from '../data-access/mapper/jugador.mapper';
 import { ContactoFormValue } from '../data-access/model/jugador.model';
-
-/** Vacío vale: el jugador puede no tener email. Si lo hay, que lo parezca. */
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Alta de un jugador como contacto: solo el nombre es obligatorio. */
 @Component({
@@ -71,7 +69,7 @@ export class ContactoForm {
       minLength(path.nombre, 3, { message: 'Al menos 3 caracteres' });
       maxLength(path.nombre, 200, { message: 'No puede superar 200 caracteres' });
       validate(path.email, ({ value }) =>
-        !value().trim() || EMAIL.test(value().trim())
+        opcional(value(), esEmail)
           ? undefined
           : { kind: 'email', message: 'No parece un email válido' },
       );

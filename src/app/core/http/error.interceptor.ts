@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthStore } from '../auth/store/auth.store';
 import { ToastService } from '../toast/toast.service';
-import { toAppError } from './app-error';
+import { esSinServidor, toAppError } from './app-error';
 
 // para peticiones silenciosas y que salgan inline, por ejemplo en un autocomplete
 export const SILENT_ERRORS = new HttpContextToken<boolean>(() => false);
@@ -22,7 +22,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (err.status === 401 && auth.isLoggedIn()) auth.logout('Tu sesión ha caducado');
       // Silenciosa = el componente pinta el error: un 403 en un formulario no debe sacarte de él
       else if (err.status === 403 && !silent) void router.navigate(['/403']);
-      else if (!silent) toast.error(appError.message);
+      // Una lectura sin red ya la cuenta el aviso global de conexión: no un toast por petición
+      else if (!silent && !(esSinServidor(err.status) && req.method === 'GET')) {
+        toast.error(appError.message);
+      }
       return throwError(() => appError);
     }),
   );

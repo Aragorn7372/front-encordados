@@ -37,6 +37,11 @@ export class AuthStore {
   readonly userId = computed(() => this.claims()?.[CLAIM_ID] ?? null);
   readonly username = computed(() => this.claims()?.sub ?? null);
   readonly email = computed(() => this.claims()?.email ?? null);
+  /**
+   * Si la última salida fue cerrar sesión a mano (true) o porque caducó (false). Al caducar se
+   * conserva lo guardado en el dispositivo, incluidos los cambios sin enviar (ENCUERDATU-51).
+   */
+  salidaVoluntaria = false;
 
   constructor() {
     // No hay refresh token: avisamos antes de caducar y cerramos la sesión al llegar a exp.
@@ -78,6 +83,8 @@ export class AuthStore {
 
   /** Lo que dependa de la sesión debe reaccionar a `isLoggedIn`, no llamarse desde aquí. */
   logout(reason?: string): void {
+    // Con motivo es que la sesión ha caducado; sin él, lo ha pedido el usuario
+    this.salidaVoluntaria = !reason;
     this.setToken(null);
     if (reason) this.toast.warning(reason);
     void this.router.navigate(['/login']);

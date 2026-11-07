@@ -3,6 +3,7 @@ import { AuthStore } from '../../../core/auth/store/auth.store';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { TournamentSummary } from '../../../shared/models/tournament';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { EmptyState } from '../../../shared/ui/empty-state';
 import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
@@ -17,7 +18,16 @@ type Editing = TournamentSummary | null | undefined;
 
 @Component({
   selector: 'app-torneos-list',
-  imports: [EmptyState, Modal, PageHeader, Paginator, SearchInput, TorneoCard, TorneoForm],
+  imports: [
+    SinDatos,
+    EmptyState,
+    Modal,
+    PageHeader,
+    Paginator,
+    SearchInput,
+    TorneoCard,
+    TorneoForm,
+  ],
   providers: [TorneosStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -34,10 +44,7 @@ type Editing = TournamentSummary | null | undefined;
     </div>
 
     @if (store.failed()) {
-      <app-empty-state
-        heading="No se han podido cargar los torneos"
-        message="Inténtalo de nuevo en unos segundos."
-      />
+      <app-sin-datos que="torneos" />
     } @else if (store.tournaments().length === 0 && !store.loading()) {
       <app-empty-state heading="No hay torneos" message="Cuando haya alguno, aparecerá aquí." />
     } @else {

@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { provideEscriturasDirectas } from '../data-access/store/pedidos-escrituras.testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideSpanishLocale } from '../../../core/config/i18n/provide-locale';
@@ -53,6 +54,7 @@ describe('Terminados', () => {
         provideSpanishLocale(),
         { provide: TournamentContext, useValue: { selectedId: torneo } },
         { provide: PedidosApi, useValue: {} },
+        provideEscriturasDirectas({}),
       ],
     });
     TestBed.overrideComponent(Terminados, {

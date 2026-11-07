@@ -14,7 +14,13 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (image(); as src) {
-      <img class="rounded-box mb-2 size-24 object-cover" alt="Vista previa" [src]="src" />
+      <img
+        class="mb-2 size-24 object-cover"
+        [class.rounded-box]="!redondo()"
+        [class.rounded-full]="redondo()"
+        alt="Vista previa"
+        [src]="src"
+      />
     }
     <input
       type="file"
@@ -31,6 +37,8 @@ export class FilePicker {
   readonly accept = input('');
   /** Imagen que ya existe, para verla hasta que se elija otra. */
   readonly currentImage = input<string | null>(null);
+  /** Para fotos de perfil: la vista previa con la misma forma que el avatar. */
+  readonly redondo = input(false);
   readonly fileSelected = output<File | null>();
 
   private readonly preview = signal<string | null>(null);

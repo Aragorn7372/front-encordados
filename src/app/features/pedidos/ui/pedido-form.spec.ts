@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideEscriturasDirectas } from '../data-access/store/pedidos-escrituras.testing';
 import { of } from 'rxjs';
 import { AuthStore } from '../../../core/auth/store/auth.store';
 import { PedidosApi } from '../data-access/api/pedidos.api';
@@ -40,6 +41,7 @@ describe('PedidoForm', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: PedidosApi, useValue: api },
+        provideEscriturasDirectas(api),
         {
           provide: AuthStore,
           useValue: {
@@ -165,6 +167,7 @@ describe('PedidoForm como ENCORDER', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: PedidosApi, useValue: api },
+        provideEscriturasDirectas(api),
         {
           provide: AuthStore,
           useValue: {

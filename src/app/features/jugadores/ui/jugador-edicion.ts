@@ -9,14 +9,11 @@ import {
 } from '@angular/core';
 import { FormField, FormRoot, form, minLength, required, validate } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
+import { esEmail, esTelefono, opcional } from '../../../shared/utils/validacion';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
 import { JugadoresApi } from '../data-access/api/jugadores.api';
 import { Jugador, JugadorEdicionValue } from '../data-access/model/jugador.model';
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-/** La misma regla que UserRequestDto: con prefijo, sin el +. Se aceptan espacios y guiones. */
-const TELEFONO = /^[1-9]\d{6,14}$/;
 
 /** Edición de un jugador. Solo ADMIN: el backend no deja a nadie más (ENCUERDATU-65). */
 @Component({
@@ -72,13 +69,12 @@ export class JugadorEdicion implements OnInit {
       required(path.nombre, { message: 'Indica el nombre' });
       minLength(path.nombre, 3, { message: 'Al menos 3 caracteres' });
       validate(path.email, ({ value }) =>
-        !value().trim() || EMAIL.test(value().trim())
+        opcional(value(), esEmail)
           ? undefined
           : { kind: 'email', message: 'No parece un email válido' },
       );
       validate(path.telefono, ({ value }) => {
-        const limpio = value().replace(/[\s\-+]/g, '');
-        return !limpio || TELEFONO.test(limpio)
+        return opcional(value(), esTelefono)
           ? undefined
           : { kind: 'telefono', message: 'Con prefijo y solo números: 34612345678' };
       });

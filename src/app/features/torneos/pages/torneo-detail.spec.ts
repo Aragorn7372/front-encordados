@@ -63,6 +63,6 @@ describe('TorneoDetail', () => {
     api.get.mockReturnValueOnce(throwError(() => ({ status: 404 })));
     const element = await render('OWNER');
 
-    expect(element.textContent).toContain('No se ha podido cargar el torneo');
+    expect(element.textContent).toContain('No se han podido cargar los datos del torneo');
   });
 });

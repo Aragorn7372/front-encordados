@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideEscriturasDirectas } from '../data-access/store/pedidos-escrituras.testing';
 import { of } from 'rxjs';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { Pedido } from '../data-access/model/pedido.model';
@@ -37,6 +38,7 @@ describe('PedidoDetalle', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: PedidosApi, useValue: api },
+        provideEscriturasDirectas(api),
         { provide: ConfirmService, useValue: { ask: vi.fn() } },
       ],
     });

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { ExcelActions } from '../../../core/excel/excel-actions';
 import { TournamentContext } from '../../../core/tournament-context/tournament-context';
 import { LINE_STATUS, PAYMENT_STATUS, PaymentStatus } from '../../../shared/models/status';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { EmptyState } from '../../../shared/ui/empty-state';
 import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
@@ -36,6 +37,7 @@ function resultado(pedido: Pedido): Resultado | null {
 @Component({
   selector: 'app-terminados',
   imports: [
+    SinDatos,
     Avatar,
     CurrencyPipe,
     DatePipe,
@@ -120,10 +122,7 @@ function resultado(pedido: Pedido): Resultado | null {
       </div>
 
       @if (store.failed()) {
-        <app-empty-state
-          heading="No se han podido cargar los pedidos"
-          message="Inténtalo de nuevo en unos segundos."
-        />
+        <app-sin-datos que="pedidos" />
       } @else if (filas().length === 0 && !store.loading()) {
         <app-empty-state
           heading="No hay pedidos terminados"

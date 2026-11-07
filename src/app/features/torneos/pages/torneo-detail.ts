@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AuthStore } from '../../../core/auth/store/auth.store';
 import { TOURNAMENT_STATUS } from '../../../shared/models/status';
 import { tournamentStatus } from '../../../shared/models/tournament';
-import { EmptyState } from '../../../shared/ui/empty-state';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { PageHeader } from '../../../shared/ui/page-header';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { TorneosApi } from '../data-access/api/torneos.api';
@@ -16,10 +16,10 @@ import { Avatar } from '../../../shared/ui/avatar';
 @Component({
   selector: 'app-torneo-detail',
   imports: [
+    SinDatos,
     Avatar,
     DatePipe,
     RouterLink,
-    EmptyState,
     PageHeader,
     StatusBadge,
     SupervisorsPanel,
@@ -63,9 +63,9 @@ import { Avatar } from '../../../shared/ui/avatar';
         />
       </div>
     } @else if (detail.error()) {
-      <app-empty-state
-        heading="No se ha podido cargar el torneo"
-        message="Puede que ya no exista o que no tengas acceso."
+      <app-sin-datos
+        que="datos del torneo"
+        mensaje="Puede que ya no exista o que no tengas acceso."
       />
     } @else {
       <span class="loading loading-spinner" aria-label="Cargando"></span>

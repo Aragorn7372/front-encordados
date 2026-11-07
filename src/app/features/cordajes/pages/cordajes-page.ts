@@ -4,6 +4,7 @@ import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ExcelActions } from '../../../core/excel/excel-actions';
 import { ToastService } from '../../../core/toast/toast.service';
 import { STOCK_BAJO } from '../../../shared/models/stock';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { EmptyState } from '../../../shared/ui/empty-state';
 import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
@@ -22,6 +23,7 @@ type Editing = Cordaje | null | undefined;
 @Component({
   selector: 'app-cordajes-page',
   imports: [
+    SinDatos,
     CordajeForm,
     CurrencyPipe,
     DecimalPipe,
@@ -99,10 +101,7 @@ type Editing = Cordaje | null | undefined;
       }
 
       @if (store.failed()) {
-        <app-empty-state
-          heading="No se han podido cargar los cordajes"
-          message="Inténtalo de nuevo en unos segundos."
-        />
+        <app-sin-datos que="cordajes" />
       } @else if (store.todos().length === 0 && !store.loading()) {
         <app-empty-state
           heading="Este torneo aún no tiene cordajes"

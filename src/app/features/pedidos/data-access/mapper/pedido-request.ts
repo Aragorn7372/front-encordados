@@ -6,7 +6,7 @@ import {
   nuevoArticulo,
   pedidoVacio,
 } from '../model/pedido-form.model';
-import { Pedido } from '../model/pedido.model';
+import { CambiosPedido, Pedido } from '../model/pedido.model';
 
 /** PurchasedRequestDto. */
 export interface PurchasedRequest {
@@ -164,4 +164,22 @@ export function toFormValue(pedido: Pedido): PedidoFormValue {
     lineas: lineas.length > 0 ? agrupar(lineas) : vacio.lineas,
     articulos: articulos.length > 0 ? articulos : vacio.articulos,
   };
+}
+
+/** Cuerpo del PUT de un pedido: solo los campos que cambian. */
+export type CuerpoCambios = Partial<Record<'machine' | 'payStatus' | 'comments', string>>;
+
+/**
+ * Solo se envía lo que cambia: el backend rechaza comentarios vacíos. PUT y no
+ * change-payment-status: PUT emite PEDIDO_ACTUALIZADO y el pago llega en vivo a otros tableros.
+ */
+export function cuerpoCambios(pedido: Pedido, cambios: CambiosPedido): CuerpoCambios {
+  const cuerpo: CuerpoCambios = {};
+  if (cambios.maquina.trim() !== pedido.maquina) cuerpo.machine = cambios.maquina.trim();
+  if (cambios.pago !== pedido.pago) cuerpo.payStatus = cambios.pago;
+  const comments = toComments(cambios.comentarios, pedido.materialPropio);
+  if (comments && comments !== toComments(pedido.comentarios, pedido.materialPropio)) {
+    cuerpo.comments = comments;
+  }
+  return cuerpo;
 }

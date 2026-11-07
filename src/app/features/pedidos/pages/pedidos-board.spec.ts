@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { provideEscriturasDirectas } from '../data-access/store/pedidos-escrituras.testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
@@ -58,6 +59,7 @@ describe('PedidosBoard', () => {
     needsTournament: signal(false),
     failed: signal(false),
     loading: signal(false),
+    sinEnviar: signal(new Set<string>()),
     move: vi.fn(async () => undefined),
     applyChange: vi.fn(),
     applyLine: vi.fn(),
@@ -86,6 +88,7 @@ describe('PedidosBoard', () => {
         provideRouter([]),
         { provide: RealtimeService, useValue: { status: realtime } },
         { provide: PedidosApi, useValue: api },
+        provideEscriturasDirectas(api),
         { provide: AuthStore, useValue: { hasRole: () => true, username: () => 'carlos' } },
         { provide: TournamentContext, useValue: { selectedId: torneo } },
         { provide: ConfirmService, useValue: confirm },

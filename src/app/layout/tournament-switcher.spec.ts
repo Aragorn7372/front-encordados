@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { PrecargaService } from '../core/offline/precarga.service';
 import { TournamentContext } from '../core/tournament-context/tournament-context';
 import { TournamentSwitcher } from './tournament-switcher';
 
@@ -12,10 +13,14 @@ describe('TournamentSwitcher', () => {
     selected: () => tournaments().find((t) => t.id === selectedId()) ?? null,
     select: vi.fn(),
   };
+  const guardados = signal<Record<string, number>>({});
 
   const render = async () => {
     TestBed.configureTestingModule({
-      providers: [{ provide: TournamentContext, useValue: context }],
+      providers: [
+        { provide: TournamentContext, useValue: context },
+        { provide: PrecargaService, useValue: { guardados } },
+      ],
     });
     const fixture = TestBed.createComponent(TournamentSwitcher);
     await fixture.whenStable();
@@ -26,6 +31,7 @@ describe('TournamentSwitcher', () => {
     vi.clearAllMocks();
     tournaments.set([]);
     selectedId.set(null);
+    guardados.set({});
   });
 
   it('sin torneos no muestra nada', async () => {
@@ -69,5 +75,18 @@ describe('TournamentSwitcher', () => {
     select.dispatchEvent(new Event('change'));
 
     expect(context.select).toHaveBeenCalledWith(null);
+  });
+
+  it('marca con ✓ los torneos guardados para usarlos sin conexión', async () => {
+    tournaments.set([
+      { id: 'a', name: 'Madrid Open' },
+      { id: 'b', name: 'Roland Garros' },
+    ]);
+    guardados.set({ b: Date.now() });
+
+    const element = await render();
+    const opciones = [...element.querySelectorAll('option')].map((o) => o.textContent?.trim());
+
+    expect(opciones).toEqual(['Selecciona un torneo', 'Madrid Open', '✓ Roland Garros']);
   });
 });

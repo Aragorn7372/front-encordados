@@ -4,7 +4,7 @@ import { AuthStore } from '../../../core/auth/store/auth.store';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { ROLE_LABEL } from '../../../shared/models/roles';
-import { EmptyState } from '../../../shared/ui/empty-state';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
 import { SearchInput } from '../../../shared/ui/search-input';
@@ -23,7 +23,7 @@ import { Avatar } from '../../../shared/ui/avatar';
 
 @Component({
   selector: 'app-usuarios-page',
-  imports: [Avatar, BackupPanel, EmptyState, Modal, PageHeader, RolForm, RouterLink, SearchInput],
+  imports: [SinDatos, Avatar, BackupPanel, Modal, PageHeader, RolForm, RouterLink, SearchInput],
   providers: [UsuariosStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -64,10 +64,7 @@ import { Avatar } from '../../../shared/ui/avatar';
     }
 
     @if (store.failed()) {
-      <app-empty-state
-        heading="No se han podido cargar los usuarios"
-        message="Inténtalo de nuevo en unos segundos."
-      />
+      <app-sin-datos que="usuarios" />
     } @else {
       <div class="overflow-x-auto" [attr.aria-busy]="store.loading()">
         <table class="table">

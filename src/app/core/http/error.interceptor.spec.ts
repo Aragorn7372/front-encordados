@@ -122,7 +122,7 @@ describe('errorInterceptor', () => {
     expect(toast.toasts()).toHaveLength(0);
   });
 
-  it('error de red: toast "Sin conexión" y reenvía el AppError con status 0', async () => {
+  it('lectura sin red: sin toast (lo cuenta el aviso global) y reenvía el AppError con status 0', async () => {
     const promesa = firstValueFrom(http.get('/api/test'));
 
     backend.expectOne('/api/test').error(new ProgressEvent('error'));
@@ -131,6 +131,27 @@ describe('errorInterceptor', () => {
       status: 0,
       message: 'Sin conexión con el servidor',
     });
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
+  it('el 504 del service worker cuenta como falta de conexión', async () => {
+    const promesa = firstValueFrom(http.get('/api/test'));
+
+    backend.expectOne('/api/test').flush('', { status: 504, statusText: 'Gateway Timeout' });
+
+    await expect(promesa).rejects.toMatchObject<Partial<AppError>>({
+      status: 504,
+      message: 'Sin conexión con el servidor',
+    });
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
+  it('escritura sin red: sí avisa, porque el cambio no se ha guardado', async () => {
+    const promesa = firstValueFrom(http.post('/api/test', {}));
+
+    backend.expectOne('/api/test').error(new ProgressEvent('error'));
+
+    await expect(promesa).rejects.toMatchObject<Partial<AppError>>({ status: 0 });
     expect(toast.toasts()[0].message).toBe('Sin conexión con el servidor');
   });
 });

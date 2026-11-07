@@ -6,7 +6,6 @@ import { inject } from '@angular/core';
 import { Role } from './shared/models/roles';
 
 const TODOS: Role[] = ['ADMIN', 'OWNER', 'SUPERVISOR', 'ENCORDER', 'USER'];
-const enConstruccion = () => import('./shared/ui/coming-soon');
 
 export const routes: Routes = [
   {
@@ -126,7 +125,7 @@ export const routes: Routes = [
         title: 'Mi perfil',
         canMatch: [roleGuard],
         data: { roles: TODOS },
-        loadComponent: enConstruccion,
+        loadComponent: () => import('./features/perfil/pages/perfil-page'),
       },
       {
         path: '**',

@@ -26,7 +26,9 @@ export class MeStore {
       : undefined,
   );
 
-  private readonly datos = computed(() => (this.me.hasValue() ? this.me.value() : null));
+  /** null mientras carga o si el backend no lo da (SUPERVISOR, ENCUERDATU-73). */
+  readonly datos = computed(() => (this.me.hasValue() ? this.me.value() : null));
+  readonly loading = this.me.isLoading;
 
   readonly imagen = computed(() => this.datos()?.imageUrl ?? null);
   /** El nombre si lo hay; si no, el username del token. */

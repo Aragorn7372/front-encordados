@@ -1,17 +1,17 @@
 import { inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { PedidoLineaDto } from '../data-access/dto/pedido.dto';
 import { LineaPedido, Pedido } from '../data-access/model/pedido.model';
-import { PedidosApi } from '../data-access/api/pedidos.api';
+import { PedidosEscrituras } from '../data-access/store/pedidos-escrituras';
 
 /**
  * Cancelar con confirmación, igual desde la tarjeta que desde el detalle.
  * Se llaman en un contexto de inyección y devuelven la acción: el resultado del servidor,
- * o null si no se confirma o falla (el interceptor ya ha mostrado el error).
+ * o null si no se confirma, si falla (ya se ha avisado) o si queda en la cola sin conexión
+ * (entonces el tablero ya lo muestra cancelado).
  */
 export function injectCancelarPedido(): (pedido: Pedido) => Promise<Pedido | null> {
-  const api = inject(PedidosApi);
+  const escrituras = inject(PedidosEscrituras);
   const confirm = inject(ConfirmService);
 
   return async (pedido) => {
@@ -24,18 +24,21 @@ export function injectCancelarPedido(): (pedido: Pedido) => Promise<Pedido | nul
     });
     if (!ok) return null;
     try {
-      return await firstValueFrom(api.cancel(pedido.id));
+      return await escrituras.cancelar(pedido);
     } catch {
       return null;
     }
   };
 }
 
-export function injectCancelarLinea(): (linea: LineaPedido) => Promise<PedidoLineaDto | null> {
-  const api = inject(PedidosApi);
+export function injectCancelarLinea(): (
+  pedido: Pedido,
+  linea: LineaPedido,
+) => Promise<PedidoLineaDto | null> {
+  const escrituras = inject(PedidosEscrituras);
   const confirm = inject(ConfirmService);
 
-  return async (linea) => {
+  return async (pedido, linea) => {
     const nombre = linea.tipo === 'encordado' ? linea.raqueta : linea.articulo;
     const ok = await confirm.ask({
       title: 'Cancelar raqueta',
@@ -46,7 +49,7 @@ export function injectCancelarLinea(): (linea: LineaPedido) => Promise<PedidoLin
     });
     if (!ok) return null;
     try {
-      return await firstValueFrom(api.cancelLine(linea.id));
+      return await escrituras.cancelarLinea(pedido, linea);
     } catch {
       return null;
     }

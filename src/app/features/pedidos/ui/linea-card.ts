@@ -83,6 +83,15 @@ const cordaje = ({ cuerda, tension, preestirado }: Cordaje) => {
           @if (urgente()) {
             <span class="badge badge-error">Urgente</span>
           }
+          @if (sinEnviar()) {
+            <span
+              class="badge badge-warning badge-soft"
+              data-testid="sin-enviar"
+              title="Hecho sin conexión: se enviará al recuperarla"
+            >
+              Sin enviar
+            </span>
+          }
         </div>
 
         <p class="text-xs opacity-70">
@@ -141,6 +150,7 @@ export class LineaCard {
   readonly readonly = input(false);
   /** Solo quien puede crear pedidos (el supervisor no). */
   readonly canRepeat = input(false);
+  readonly sinEnviar = input(false);
   /** Alternativa al arrastre: también debe poder usarse con teclado y en móvil. */
   readonly moved = output<Columna>();
   readonly opened = output();

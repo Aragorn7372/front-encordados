@@ -8,14 +8,13 @@ import {
   linkedSignal,
   output,
 } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import { LINE_STATUS, PAYMENT_STATUS, StatusInfo } from '../../../shared/models/status';
 import { Icon } from '../../../shared/ui/icon';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { pedidoCancelable } from '../data-access/mapper/pedido.mapper';
 import { LineaPedido, Pedido } from '../data-access/model/pedido.model';
 import { PedidoLineaDto } from '../data-access/dto/pedido.dto';
-import { PedidosApi } from '../data-access/api/pedidos.api';
+import { PedidosEscrituras } from '../data-access/store/pedidos-escrituras';
 import { CambioLinea, PedidoLineas } from './pedido-lineas';
 import { PedidoEdicion } from './pedido-edicion';
 import { injectCancelarLinea, injectCancelarPedido } from './cancelar-pedido';
@@ -138,7 +137,7 @@ export interface LineaActualizada {
   `,
 })
 export class PedidoDetalle {
-  private readonly api = inject(PedidosApi);
+  private readonly escrituras = inject(PedidosEscrituras);
   private readonly cancelarPedido = injectCancelarPedido();
   private readonly cancelarLineaPedido = injectCancelarLinea();
 
@@ -164,9 +163,10 @@ export class PedidoDetalle {
     () => PAYMENT_STATUS[this.pedido().pago] ?? { label: this.pedido().pago, tone: 'neutral' },
   );
 
-  protected onGuardado(pedido: Pedido): void {
+  /** null: quedó en la cola sin conexión, y el tablero ya lo muestra cambiado. */
+  protected onGuardado(pedido: Pedido | null): void {
     this.editando.set(false);
-    this.changed.emit(pedido);
+    if (pedido) this.changed.emit(pedido);
   }
 
   protected async cancelar(): Promise<void> {
@@ -175,16 +175,16 @@ export class PedidoDetalle {
   }
 
   protected async cancelarLinea(linea: LineaPedido): Promise<void> {
-    const actualizada = await this.cancelarLineaPedido(linea);
+    const actualizada = await this.cancelarLineaPedido(this.pedido(), linea);
     if (actualizada) this.lineChanged.emit({ pedidoId: this.pedido().id, linea: actualizada });
   }
 
   protected async onLinea({ linea, estado, revertir }: CambioLinea): Promise<void> {
     try {
-      const actualizada = await firstValueFrom(this.api.changeLineStatus(linea.id, estado));
-      this.lineChanged.emit({ pedidoId: this.pedido().id, linea: actualizada });
+      const actualizada = await this.escrituras.estadoLinea(this.pedido(), linea, estado);
+      if (actualizada) this.lineChanged.emit({ pedidoId: this.pedido().id, linea: actualizada });
     } catch {
-      revertir(); // El interceptor ya ha mostrado el error
+      revertir(); // Ya se ha avisado del error
     }
   }
 }

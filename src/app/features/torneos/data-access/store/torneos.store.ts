@@ -4,19 +4,22 @@ import { TournamentContext } from '../../../../core/tournament-context/tournamen
 import { PageQuery } from '../../../../shared/models/page';
 import { TorneosApi } from '../api/torneos.api';
 
+/** La primera página que se pide. Exportada: la precarga offline debe pedir la misma URL. */
+export const CONSULTA_INICIAL: PageQuery = {
+  page: 0,
+  size: 12,
+  sortBy: 'name',
+  direction: 'asc',
+  search: '',
+};
+
 /** Estado de la pantalla de listado: la query manda y el recurso se recarga solo. */
 @Injectable()
 export class TorneosStore {
   private readonly api = inject(TorneosApi);
   private readonly context = inject(TournamentContext);
 
-  readonly query = signal<PageQuery>({
-    page: 0,
-    size: 12,
-    sortBy: 'name',
-    direction: 'asc',
-    search: '',
-  });
+  readonly query = signal<PageQuery>(CONSULTA_INICIAL);
 
   private readonly result = resource({
     params: () => this.query(),

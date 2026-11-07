@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { PrecargaService } from '../core/offline/precarga.service';
 import { TournamentContext } from '../core/tournament-context/tournament-context';
 
 @Component({
@@ -14,7 +15,7 @@ import { TournamentContext } from '../core/tournament-context/tournament-context
         <option value="" [selected]="!context.selectedId()">Selecciona un torneo</option>
         @for (tournament of context.tournaments(); track tournament.id) {
           <option [value]="tournament.id" [selected]="tournament.id === context.selectedId()">
-            {{ tournament.name }}
+            {{ precarga.guardados()[tournament.id] ? '✓ ' : '' }}{{ tournament.name }}
           </option>
         }
       </select>
@@ -25,6 +26,8 @@ import { TournamentContext } from '../core/tournament-context/tournament-context
 })
 export class TournamentSwitcher {
   protected readonly context = inject(TournamentContext);
+  /** Los torneos guardados llevan ✓: se pueden abrir sin conexión. */
+  protected readonly precarga = inject(PrecargaService);
 
   protected onChange(event: Event) {
     this.context.select((event.target as HTMLSelectElement).value || null);

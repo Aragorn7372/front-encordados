@@ -130,7 +130,7 @@ export function tarjetasDe(pedido: Pedido): Tarjeta[] {
   }));
 }
 
-const nombreLinea = (linea: LineaPedido) =>
+export const nombreLinea = (linea: LineaPedido) =>
   linea.tipo === 'taller' ? linea.articulo : linea.raqueta;
 
 const camposPedido = (pedido: Pedido) => [

@@ -4,6 +4,7 @@ import { AuthStore } from '../../../core/auth/store/auth.store';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ExcelActions } from '../../../core/excel/excel-actions';
 import { ToastService } from '../../../core/toast/toast.service';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { EmptyState } from '../../../shared/ui/empty-state';
 import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
@@ -35,6 +36,7 @@ const TITULOS: Record<Accion['tipo'], string> = {
 @Component({
   selector: 'app-jugadores-page',
   imports: [
+    SinDatos,
     Avatar,
     BonosForm,
     ContactoForm,
@@ -101,10 +103,7 @@ const TITULOS: Record<Accion['tipo'], string> = {
       }
 
       @if (store.failed()) {
-        <app-empty-state
-          heading="No se han podido cargar los jugadores"
-          message="Inténtalo de nuevo en unos segundos."
-        />
+        <app-sin-datos que="jugadores" />
       } @else if (store.todos().length === 0 && !store.loading()) {
         <app-empty-state
           heading="Este torneo aún no tiene jugadores"

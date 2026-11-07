@@ -8,12 +8,11 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, FormRoot, form, maxLength, required } from '@angular/forms/signals';
-import { firstValueFrom } from 'rxjs';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { PAYMENT_STATUS, PaymentStatus } from '../../../shared/models/status';
 import { FieldError } from '../../../shared/ui/field-error';
 import { Pedido } from '../data-access/model/pedido.model';
-import { PedidosApi } from '../data-access/api/pedidos.api';
+import { PedidosEscrituras } from '../data-access/store/pedidos-escrituras';
 
 /**
  * Los campos editables del pedido en modo edición. Se pinta en el mismo sitio y con la misma
@@ -65,10 +64,11 @@ import { PedidosApi } from '../data-access/api/pedidos.api';
   `,
 })
 export class PedidoEdicion implements OnInit {
-  private readonly api = inject(PedidosApi);
+  private readonly escrituras = inject(PedidosEscrituras);
 
   readonly pedido = input.required<Pedido>();
-  readonly saved = output<Pedido>();
+  /** null: sin conexión, el cambio quedó en la cola (y ya se ve en el tablero). */
+  readonly saved = output<Pedido | null>();
   readonly cancelled = output();
 
   protected readonly pagos = Object.entries(PAYMENT_STATUS).map(([value, info]) => ({
@@ -90,13 +90,11 @@ export class PedidoEdicion implements OnInit {
         action: async (field) => {
           const { maquina, pago, comentarios } = field().value();
           try {
-            const actualizado = await firstValueFrom(
-              this.api.update(this.pedido(), {
-                maquina,
-                pago: pago as PaymentStatus,
-                comentarios,
-              }),
-            );
+            const actualizado = await this.escrituras.editar(this.pedido(), {
+              maquina,
+              pago: pago as PaymentStatus,
+              comentarios,
+            });
             this.saved.emit(actualizado);
             return undefined;
           } catch (error) {

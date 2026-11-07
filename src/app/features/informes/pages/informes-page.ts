@@ -7,6 +7,7 @@ import { ExcelTipo } from '../../../core/excel/excel.model';
 import { ColorTema, ThemeColors } from '../../../core/theme/theme-colors';
 import { LINE_STATUS, LineStatus } from '../../../shared/models/status';
 import { Chart } from '../../../shared/ui/chart';
+import { SinDatos } from '../../../core/offline/sin-datos';
 import { EmptyState } from '../../../shared/ui/empty-state';
 import { PageHeader } from '../../../shared/ui/page-header';
 import { StatCard } from '../../../shared/ui/stat-card';
@@ -33,7 +34,7 @@ const corto = (dia: string) => {
 
 @Component({
   selector: 'app-informes-page',
-  imports: [Chart, CurrencyPipe, EmptyState, ExcelActions, PageHeader, StatCard],
+  imports: [SinDatos, Chart, CurrencyPipe, EmptyState, ExcelActions, PageHeader, StatCard],
   providers: [InformesStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -55,10 +56,7 @@ const corto = (dia: string) => {
         message="Elige un torneo en la barra superior para ver su informe."
       />
     } @else if (store.failed()) {
-      <app-empty-state
-        heading="No se ha podido cargar el informe"
-        message="Inténtalo de nuevo en unos segundos."
-      />
+      <app-sin-datos que="datos del informe" />
     } @else {
       <form
         class="mb-4 flex flex-wrap items-end gap-2"

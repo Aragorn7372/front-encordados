@@ -8,12 +8,20 @@ export interface AppError {
 
 const camelCase = (key: string) => key.charAt(0).toLowerCase() + key.slice(1);
 
+/**
+ * El servidor no es alcanzable: sin red (0), o un proxy que no llega al backend (502-504).
+ * El service worker de Angular devuelve 504 cuando la red falla.
+ */
+export function esSinServidor(status: number): boolean {
+  return status === 0 || status === 502 || status === 503 || status === 504;
+}
+
 export function toAppError(err: HttpErrorResponse): AppError {
   const body = err.error;
   const fieldErrors: Record<string, string[]> = {};
   let message = 'Ha ocurrido un error inesperado';
 
-  if (err.status === 0) message = 'Sin conexión con el servidor';
+  if (esSinServidor(err.status)) message = 'Sin conexión con el servidor';
   else if (err.status === 429) message = 'Demasiadas peticiones, espera unos segundos';
   else if (Array.isArray(body)) {
     // FluentValidation: [{propertyName, errorMessage}]

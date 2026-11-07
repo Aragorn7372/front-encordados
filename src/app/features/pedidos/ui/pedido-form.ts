@@ -23,7 +23,6 @@ import {
   required,
   validate,
 } from '@angular/forms/signals';
-import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '../../../core/auth/store/auth.store';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { PAYMENT_STATUS } from '../../../shared/models/status';
@@ -38,8 +37,8 @@ import {
   totalRaquetas,
 } from '../data-access/model/pedido-form.model';
 import { toPurchasedRequest } from '../data-access/mapper/pedido-request';
-import { Pedido } from '../data-access/model/pedido.model';
 import { JugadorOpcion, PedidosApi } from '../data-access/api/pedidos.api';
+import { PedidoCreado, PedidosEscrituras } from '../data-access/store/pedidos-escrituras';
 import { ContactoRapido } from './contacto-rapido';
 
 const maquinaGuardada = (tournamentId: string) => `etr_maquina:${tournamentId}`;
@@ -52,6 +51,7 @@ const maquinaGuardada = (tournamentId: string) => `etr_maquina:${tournamentId}`;
 })
 export class PedidoForm implements OnInit {
   private readonly api = inject(PedidosApi);
+  private readonly escrituras = inject(PedidosEscrituras);
   private readonly auth = inject(AuthStore);
 
   readonly tournamentId = input.required<string>();
@@ -59,7 +59,7 @@ export class PedidoForm implements OnInit {
   readonly inicial = input<PedidoFormValue | null>(null);
   /** Al repetir, el jugador original aunque ya no figure entre los del torneo. */
   readonly jugadorExtra = input<JugadorOpcion | null>(null);
-  readonly created = output<Pedido>();
+  readonly created = output<PedidoCreado>();
   readonly cancelled = output();
 
   /**
@@ -165,15 +165,20 @@ export class PedidoForm implements OnInit {
       submission: {
         action: async (field) => {
           const value = field().value();
+          // Para verlo ya en el tablero si queda en la cola sin conexión
+          const persona = (username: string, lista: { username: string; name: string }[]) =>
+            lista.find((p) => p.username === username) ?? { username, name: username };
           try {
-            const pedido = await firstValueFrom(
-              this.api.create(toPurchasedRequest(value, this.tournamentId())),
+            const creado = await this.escrituras.crear(
+              toPurchasedRequest(value, this.tournamentId()),
+              this.jugador() ?? persona(value.jugador, []),
+              persona(value.encordador, this.encordadores()),
             );
             // Solo la suya: si lo asigna a otro, esa máquina no es la de él
             if (this.esEncordador() && value.encordador === this.auth.username()) {
               localStorage.setItem(maquinaGuardada(this.tournamentId()), value.maquina.trim());
             }
-            this.created.emit(pedido);
+            this.created.emit(creado);
             return undefined;
           } catch (error) {
             return toFormErrors(error, field);
