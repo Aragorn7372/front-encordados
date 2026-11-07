@@ -3,11 +3,12 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { OfflineState } from '../core/offline/offline-state';
 import { PrecargaService } from '../core/offline/precarga.service';
 import { PwaService } from '../core/pwa/pwa.service';
+import { Icon } from '../shared/ui/icon';
 
 /** Si lo que se está viendo está guardado para usarlo sin conexión, y si se está guardando. */
 @Component({
   selector: 'app-precarga-estado',
-  imports: [DatePipe],
+  imports: [Icon, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (estado(); as e) {
@@ -31,7 +32,7 @@ import { PwaService } from '../core/pwa/pwa.service';
             "
             (click)="precarga.actualizar()"
           >
-            ✓ <span class="hidden sm:inline">Disponible sin conexión</span>
+            <app-icon name="hecho" /> <span class="hidden sm:inline">Disponible sin conexión</span>
           </button>
         }
         @case ('incompleta') {
@@ -48,7 +49,7 @@ import { PwaService } from '../core/pwa/pwa.service';
             "
             (click)="precarga.actualizar()"
           >
-            ⚠ <span class="hidden sm:inline">Copia incompleta</span>
+            <app-icon name="aviso" /> <span class="hidden sm:inline">Copia incompleta</span>
           </button>
         }
       }

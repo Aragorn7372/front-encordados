@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ToastService } from './toast.service';
 import { ToastType } from './toast.model';
+import { Icon } from '../../shared/ui/icon';
 
 @Component({
   selector: 'app-toaster',
+  imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="toast toast-end z-50">
@@ -16,7 +18,7 @@ import { ToastType } from './toast.model';
             aria-label="Cerrar"
             (click)="toast.dismiss(t.id)"
           >
-            ✕
+            <app-icon name="cerrar" />
           </button>
         </div>
       }

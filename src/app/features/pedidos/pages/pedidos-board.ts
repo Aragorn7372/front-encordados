@@ -34,6 +34,7 @@ import { CodigosPedido } from '../ui/codigos-pedido';
 import { PedidoFormValue } from '../data-access/model/pedido-form.model';
 import { toFormValue } from '../data-access/mapper/pedido-request';
 import { injectCancelarLinea } from '../ui/cancelar-pedido';
+import { Icon } from '../../../shared/ui/icon';
 
 /**
  * Decidido que el jugador puede cancelar, pero el backend aún responde 403 (ENCUERDATU-58).
@@ -52,6 +53,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
 @Component({
   selector: 'app-pedidos-board',
   imports: [
+    Icon,
     CodigosPedido,
     SinDatos,
     CdkDropListGroup,
@@ -109,7 +111,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
 
         @if (encordador(); as nombre) {
           <button type="button" class="btn btn-sm" (click)="setFilter('encordador', '')">
-            Encordador: {{ nombre }} ✕
+            Encordador: {{ nombre }} <app-icon name="cerrar" />
           </button>
         }
       </div>

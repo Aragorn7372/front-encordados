@@ -12,10 +12,12 @@ import { TorneosApi } from '../data-access/api/torneos.api';
 import { SupervisorsPanel } from '../ui/supervisors-panel';
 import { WorkersPanel } from '../ui/workers-panel';
 import { Avatar } from '../../../shared/ui/avatar';
+import { Icon } from '../../../shared/ui/icon';
 
 @Component({
   selector: 'app-torneo-detail',
   imports: [
+    Icon,
     SinDatos,
     Avatar,
     DatePipe,
@@ -27,7 +29,9 @@ import { Avatar } from '../../../shared/ui/avatar';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <a class="link mb-3 inline-block text-sm" routerLink="/torneos">← Volver a torneos</a>
+    <a class="link mb-3 inline-flex items-center gap-1 text-sm" routerLink="/torneos"
+      ><app-icon name="volver" /> Volver a torneos</a
+    >
 
     @if (tournament(); as data) {
       <app-page-header

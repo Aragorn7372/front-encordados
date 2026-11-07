@@ -4,6 +4,7 @@ import { LINE_STATUS, LineStatus } from '../../../shared/models/status';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { lineaCancelable } from '../data-access/mapper/pedido.mapper';
 import { LineaPedido } from '../data-access/model/pedido.model';
+import { Icon } from '../../../shared/ui/icon';
 
 export interface CambioLinea {
   linea: LineaPedido;
@@ -22,7 +23,7 @@ const ESTADOS_SELECCIONABLES: LineStatus[] = [
 
 @Component({
   selector: 'app-pedido-lineas',
-  imports: [DatePipe, StatusBadge],
+  imports: [Icon, DatePipe, StatusBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ul class="divide-base-300 divide-y">
@@ -79,7 +80,7 @@ const ESTADOS_SELECCIONABLES: LineStatus[] = [
                   [attr.aria-label]="'Cancelar ' + nombre(linea)"
                   (click)="cancelled.emit(linea)"
                 >
-                  ✕
+                  <app-icon name="cerrar" />
                 </button>
               }
             </div>

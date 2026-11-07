@@ -14,6 +14,7 @@ import { StatCard } from '../../../shared/ui/stat-card';
 import { INFORME_MAX } from '../data-access/api/informes.api';
 import { ESTADOS_INFORME, FiltrosInforme } from '../data-access/model/informe.model';
 import { InformesStore } from '../data-access/store/informes.store';
+import { Icon } from '../../../shared/ui/icon';
 
 /** Los mismos colores que los badges de estado, para que se reconozcan de un vistazo. */
 const COLOR_ESTADO: Record<LineStatus, ColorTema> = {
@@ -34,7 +35,7 @@ const corto = (dia: string) => {
 
 @Component({
   selector: 'app-informes-page',
-  imports: [SinDatos, Chart, CurrencyPipe, EmptyState, ExcelActions, PageHeader, StatCard],
+  imports: [Icon, SinDatos, Chart, CurrencyPipe, EmptyState, ExcelActions, PageHeader, StatCard],
   providers: [InformesStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -109,7 +110,7 @@ const corto = (dia: string) => {
             [attr.aria-label]="'Quitar el filtro de encordador ' + encordador"
             (click)="store.setFiltro('encordador', '')"
           >
-            Encordador: {{ encordador }} ✕
+            Encordador: {{ encordador }} <app-icon name="cerrar" />
           </button>
         }
         @if (store.hayFiltros()) {

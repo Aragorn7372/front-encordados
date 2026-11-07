@@ -7,6 +7,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
+import { Icon } from './icon';
 
 /**
  * Modal genérico: `open` manda y el <dialog> obedece, como en ConfirmDialog.
@@ -15,6 +16,7 @@ import {
  */
 @Component({
   selector: 'app-modal',
+  imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dialog #dialog class="modal" (cancel)="onEsc($event)">
@@ -27,7 +29,7 @@ import {
             aria-label="Cerrar"
             (click)="closed.emit()"
           >
-            ✕
+            <app-icon name="cerrar" />
           </button>
         </header>
         <ng-content />
