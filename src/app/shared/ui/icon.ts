@@ -13,6 +13,7 @@ const ICONS = {
   usuarios: '👥',
   escanear: '📷',
   codigos: '🏷️',
+  campana: '🔔',
   menu: '☰',
   editar: '✏️',
   sol: '☀️',

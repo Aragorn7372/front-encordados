@@ -11,6 +11,7 @@ import { ROLE_LABEL } from '../shared/models/roles';
 import { Avatar } from '../shared/ui/avatar';
 import { Icon } from '../shared/ui/icon';
 import { ThemeToggle } from '../shared/ui/theme-toggle';
+import { Campana } from './campana';
 import { CambiosPendientes } from './cambios-pendientes';
 import { PrecargaEstado } from './precarga-estado';
 import { TournamentSwitcher } from './tournament-switcher';
@@ -19,6 +20,7 @@ import { TournamentSwitcher } from './tournament-switcher';
   selector: 'app-topbar',
   imports: [
     Avatar,
+    Campana,
     CambiosPendientes,
     RouterLink,
     Icon,
@@ -53,6 +55,9 @@ import { TournamentSwitcher } from './tournament-switcher';
         </button>
       }
       <app-cambios-pendientes class="mr-1" />
+      @if (conCampana()) {
+        <app-campana />
+      }
       @if (puedeEscanear()) {
         <a
           routerLink="/escanear"
@@ -115,6 +120,11 @@ export class Topbar {
   private readonly outbox = inject(OutboxService);
   private readonly confirm = inject(ConfirmService);
   readonly menuToggled = output();
+
+  /** El jugador no recibe el tiempo real (el hub no lo admite): no tendría nada que avisar. */
+  protected readonly conCampana = computed(
+    () => this.auth.isLoggedIn() && !this.auth.hasRole('USER'),
+  );
 
   /** Los mismos roles que la ruta /escanear: el supervisor no ve pedidos. */
   protected readonly puedeEscanear = computed(() =>

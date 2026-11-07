@@ -12,17 +12,9 @@ import {
 import { Router } from '@angular/router';
 import { AuthStore } from '../../../core/auth/store/auth.store';
 import { leerCodigo } from '../../../shared/models/codigo-pedido';
-import { Role } from '../../../shared/models/roles';
+import { rutaPedidosDe } from '../../../shared/models/rutas-pedidos';
 import { PageHeader } from '../../../shared/ui/page-header';
 import { CamaraEscaner } from '../ui/camara-escaner';
-
-/** Dónde ve cada rol sus pedidos: ahí se abre el escaneado. */
-const PEDIDOS_DE: Partial<Record<Role, string>> = {
-  ADMIN: '/pedidos',
-  OWNER: '/pedidos',
-  ENCORDER: '/mis-asignados',
-  USER: '/mis-pedidos',
-};
 
 /**
  * Escanear un pedido: con la cámara, escribiendo el código o con un lector USB/Bluetooth (que
@@ -92,8 +84,7 @@ export default class EscanerPage {
       this.noReconocido.set(leido.texto);
       return;
     }
-    const rol = this.auth.role();
-    const destino = rol ? PEDIDOS_DE[rol] : undefined;
+    const destino = rutaPedidosDe(this.auth.role());
     if (!destino) return;
     void this.router.navigate([destino], { queryParams: { openPedido: leido.id } });
   }

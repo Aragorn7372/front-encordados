@@ -82,6 +82,12 @@ export class OutboxService {
   private readonly sincronizada = new Subject<void>();
   /** Al acabar de vaciar la cola (si se envió algo): momento de pedir datos frescos. */
   readonly sincronizada$ = this.sincronizada.asObservable();
+  private readonly propias = new Subject<unknown>();
+  /**
+   * Cada escritura de este usuario justo antes de salir hacia el servidor (directa o desde la
+   * cola), con los ids ya reales. El tiempo real se la devolverá: así se sabe que es suya.
+   */
+  readonly propias$ = this.propias.asObservable();
 
   private carga: Promise<void> = Promise.resolve();
   private reintento: ReturnType<typeof setTimeout> | null = null;
@@ -298,6 +304,7 @@ export class OutboxService {
   }
 
   private enviar(manejador: ManejadorOutbox, payload: unknown): Observable<unknown> {
+    this.propias.next(payload);
     const fondo = this.fondo!;
     return runInInjectionContext(fondo, () => manejador.enviar(fondo.get(manejador.api), payload));
   }
