@@ -10,6 +10,14 @@
       }
     },
     {
+      "name": "escaner",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/zxing/*.wasm"]
+      }
+    },
+    {
       "name": "assets",
       "installMode": "lazy",
       "updateMode": "prefetch",

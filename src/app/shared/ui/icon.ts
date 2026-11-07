@@ -11,6 +11,8 @@ const ICONS = {
   torneos: '🏆',
   informes: '📊',
   usuarios: '👥',
+  escanear: '📷',
+  codigos: '🏷️',
   menu: '☰',
   editar: '✏️',
   sol: '☀️',

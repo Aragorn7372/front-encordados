@@ -41,6 +41,7 @@ export interface TarjetaMovida {
             (opened)="abierta.emit(tarjeta)"
             (repeat)="repetir.emit(tarjeta)"
             (cancelRequest)="cancelar.emit(tarjeta)"
+            (codes)="codigos.emit(tarjeta)"
           />
         } @empty {
           <p class="py-4 text-center text-sm opacity-50">Sin raquetas</p>
@@ -61,6 +62,7 @@ export class KanbanColumn {
   readonly abierta = output<Tarjeta>();
   readonly repetir = output<Tarjeta>();
   readonly cancelar = output<Tarjeta>();
+  readonly codigos = output<Tarjeta>();
 
   protected onDrop(event: CdkDragDrop<Columna, Columna, Tarjeta>) {
     if (event.previousContainer === event.container) return;

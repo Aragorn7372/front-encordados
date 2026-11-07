@@ -6,7 +6,7 @@ import {
 } from '../../../../shared/models/status';
 import { contiene } from '../../../../shared/utils/texto';
 import { PedidoLineaDto, PurchasedDto, StringSetupDto } from '../dto/pedido.dto';
-import { Columna, LineaPedido, Pedido, Tarjeta } from '../model/pedido.model';
+import { Columna, Cordaje, LineaPedido, Pedido, Tarjeta } from '../model/pedido.model';
 
 /** El backend no tiene campos para esto: viaja codificado en otros campos. */
 const TALLER_MARK = 'ORDEN_DE_TALLER';
@@ -128,6 +128,28 @@ export function tarjetasDe(pedido: Pedido): Tarjeta[] {
     numero: index + 1,
     total: pedido.lineas.length,
   }));
+}
+
+const textoCordaje = ({ cuerda, tension, preestirado }: Cordaje) => {
+  const texto = `${cuerda} ${tension} kg`;
+  return preestirado ? `${texto} +${preestirado} %` : texto;
+};
+
+/**
+ * El cordaje de una raqueta, para leerlo: una línea si la horizontal está vacía («igual que la
+ * vertical», como dice el formulario) o es igual; dos («V: …», «H: …») si cambia.
+ */
+export function cordajesDe(linea: LineaPedido): string[] {
+  if (linea.tipo !== 'encordado') return [];
+  const { vertical, horizontal } = linea;
+  const igual =
+    !horizontal.cuerda ||
+    (horizontal.cuerda === vertical.cuerda &&
+      horizontal.tension === vertical.tension &&
+      horizontal.preestirado === vertical.preestirado);
+  return igual
+    ? [textoCordaje(vertical)]
+    : [`V: ${textoCordaje(vertical)}`, `H: ${textoCordaje(horizontal)}`];
 }
 
 export const nombreLinea = (linea: LineaPedido) =>

@@ -30,6 +30,7 @@ import { esTemporal } from '../../../core/offline/outbox';
 import { KanbanColumn, TarjetaMovida } from '../ui/kanban-column';
 import { LineaActualizada, PedidoDetalle } from '../ui/pedido-detalle';
 import { PedidoForm } from '../ui/pedido-form';
+import { CodigosPedido } from '../ui/codigos-pedido';
 import { PedidoFormValue } from '../data-access/model/pedido-form.model';
 import { toFormValue } from '../data-access/mapper/pedido-request';
 import { injectCancelarLinea } from '../ui/cancelar-pedido';
@@ -51,6 +52,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
 @Component({
   selector: 'app-pedidos-board',
   imports: [
+    CodigosPedido,
     SinDatos,
     CdkDropListGroup,
     EmptyState,
@@ -138,6 +140,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
               (abierta)="abrir($event.pedido.id)"
               (repetir)="repetir($event.pedido)"
               (cancelar)="cancelarLinea($event)"
+              (codigos)="codigosDe.set($event)"
             />
           }
         </div>
@@ -159,6 +162,13 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
           (created)="onCreado($event)"
           (cancelled)="creando.set(false)"
         />
+      }
+    </app-modal>
+
+    <app-modal [heading]="codigosTitulo()" [open]="!!codigosDe()" (closed)="codigosDe.set(null)">
+      <!-- ng-content no es perezoso: los códigos se generan solo al abrirlo -->
+      @if (codigosDe(); as tarjeta) {
+        <app-codigos-pedido [pedido]="tarjeta.pedido" />
       }
     </app-modal>
 
@@ -228,6 +238,15 @@ export default class PedidosBoard {
     const enTablero = this.store.pedidos().find((p) => p.id === id);
     if (enTablero) return enTablero;
     return this.fuera.hasValue() ? this.fuera.value() : null;
+  });
+
+  /** La tarjeta cuya etiqueta se está viendo. */
+  protected readonly codigosDe = signal<Tarjeta | null>(null);
+  protected readonly codigosTitulo = computed(() => {
+    const tarjeta = this.codigosDe();
+    if (!tarjeta) return 'Códigos';
+    const { pedido, numero } = tarjeta;
+    return `Códigos · ${pedido.jugador.name || pedido.jugador.username} · ${numero}/${pedido.lineas.length}`;
   });
 
   protected readonly detalleTitulo = computed(() => {

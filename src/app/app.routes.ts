@@ -121,6 +121,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/usuarios/pages/usuarios-page'),
       },
       {
+        path: 'escanear',
+        // Sin entrada en el menú: se abre con el botón de la cámara de la barra superior
+        title: 'Escanear',
+        canMatch: [roleGuard],
+        data: { roles: ['ADMIN', 'OWNER', 'ENCORDER', 'USER'] },
+        loadComponent: () => import('./features/scanner/pages/escaner-page'),
+      },
+      {
         path: 'perfil',
         title: 'Mi perfil',
         canMatch: [roleGuard],

@@ -190,8 +190,9 @@ describe('LineaCard', () => {
     expect(element.querySelector('[data-testid=repetir]')).not.toBeNull();
   });
 
-  it('en solo lectura no hay acciones', async () => {
+  it('en solo lectura no hay acciones, pero sí sus códigos (el jugador puede querer su etiqueta)', async () => {
     const element = await render({}, {}, { readonly: true, canRepeat: true });
-    expect(element.querySelector('.card-actions button')).toBeNull();
+    expect(element.querySelector('.card-actions')).toBeNull();
+    expect(element.querySelector('[data-testid=codigos]')).not.toBeNull();
   });
 });

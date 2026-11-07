@@ -71,3 +71,20 @@
   --depth: 1;
   --noise: 1;
 }
+
+/* Impresión (core/print/impresion.ts): solo se imprime la zona preparada, nada de la app */
+.zona-impresion {
+  display: none;
+}
+@media print {
+  html.imprimiendo body > :not(.zona-impresion) {
+    display: none !important;
+  }
+  html.imprimiendo .zona-impresion {
+    display: block;
+  }
+  .zona-impresion img {
+    width: 100%;
+    max-width: 100mm;
+  }
+}

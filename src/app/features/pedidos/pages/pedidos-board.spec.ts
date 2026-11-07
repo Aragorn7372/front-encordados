@@ -292,11 +292,24 @@ describe('PedidosBoard', () => {
     expect(store.move).toHaveBeenCalledWith(tarjeta, 'listo');
   });
 
-  it('en solo lectura no hay acciones sobre las tarjetas', async () => {
+  it('en solo lectura no hay acciones sobre las tarjetas, solo sus códigos', async () => {
     store.pedidos.set([pedido('a')]);
     await render({ readonly: true });
 
-    expect(columna(0).nativeElement.querySelector('.card-actions button')).toBeNull();
+    expect(columna(0).nativeElement.querySelector('.card-actions')).toBeNull();
+    expect(columna(0).nativeElement.querySelector('[data-testid=codigos]')).not.toBeNull();
+  });
+
+  it('«Códigos» en una tarjeta abre la etiqueta de esa raqueta', async () => {
+    store.pedidos.set([pedido('a', { lineas: [linea('a-1'), linea('a-2')] })]);
+    await render();
+
+    const tarjetas = columna(0).nativeElement.querySelectorAll('app-linea-card');
+    (tarjetas[1].querySelector('[data-testid=codigos]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    const dialogo = element().querySelector('dialog[open]:has(app-codigos-pedido)');
+    expect(dialogo?.textContent).toContain('2/2');
   });
 
   it('cancelar desde la tarjeta cancela esa raqueta, con confirmación', async () => {

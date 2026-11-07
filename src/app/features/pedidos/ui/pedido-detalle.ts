@@ -19,6 +19,7 @@ import { CambioLinea, PedidoLineas } from './pedido-lineas';
 import { PedidoEdicion } from './pedido-edicion';
 import { injectCancelarLinea, injectCancelarPedido } from './cancelar-pedido';
 import { Avatar } from '../../../shared/ui/avatar';
+import { CodigosPedido } from './codigos-pedido';
 
 export interface LineaActualizada {
   pedidoId: string;
@@ -27,7 +28,16 @@ export interface LineaActualizada {
 
 @Component({
   selector: 'app-pedido-detalle',
-  imports: [Avatar, CurrencyPipe, DatePipe, Icon, StatusBadge, PedidoLineas, PedidoEdicion],
+  imports: [
+    CodigosPedido,
+    Avatar,
+    CurrencyPipe,
+    DatePipe,
+    Icon,
+    StatusBadge,
+    PedidoLineas,
+    PedidoEdicion,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mb-4 flex flex-wrap gap-1">
@@ -123,6 +133,13 @@ export interface LineaActualizada {
       (changed)="onLinea($event)"
       (cancelled)="cancelarLinea($event)"
     />
+
+    <details class="collapse-arrow bg-base-200 rounded-box collapse mt-4">
+      <summary class="collapse-title text-sm font-medium">Códigos del pedido</summary>
+      <div class="collapse-content">
+        <app-codigos-pedido [pedido]="pedido()" />
+      </div>
+    </details>
 
     @if (canRepeat() || (canCancel() && cancelable())) {
       <div class="modal-action">

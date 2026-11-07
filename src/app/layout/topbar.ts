@@ -53,6 +53,16 @@ import { TournamentSwitcher } from './tournament-switcher';
         </button>
       }
       <app-cambios-pendientes class="mr-1" />
+      @if (puedeEscanear()) {
+        <a
+          routerLink="/escanear"
+          class="btn btn-ghost btn-square"
+          aria-label="Escanear un QR o código de barras"
+          title="Escanear un QR o código de barras"
+        >
+          <app-icon name="escanear" />
+        </a>
+      }
       <app-theme-toggle />
 
       <div class="dropdown dropdown-end">
@@ -105,6 +115,11 @@ export class Topbar {
   private readonly outbox = inject(OutboxService);
   private readonly confirm = inject(ConfirmService);
   readonly menuToggled = output();
+
+  /** Los mismos roles que la ruta /escanear: el supervisor no ve pedidos. */
+  protected readonly puedeEscanear = computed(() =>
+    this.auth.hasRole('ADMIN', 'OWNER', 'ENCORDER', 'USER'),
+  );
 
   protected readonly roleLabel = computed(() => {
     const role = this.auth.role();

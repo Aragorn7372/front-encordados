@@ -1,9 +1,10 @@
+import { Icon } from '../../../shared/ui/icon';
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { LINE_STATUS, PAYMENT_STATUS, StatusInfo } from '../../../shared/models/status';
 import { StatusBadge } from '../../../shared/ui/status-badge';
-import { esUrgente, lineaCancelable } from '../data-access/mapper/pedido.mapper';
-import { Columna, Cordaje, Tarjeta } from '../data-access/model/pedido.model';
+import { cordajesDe, esUrgente, lineaCancelable } from '../data-access/mapper/pedido.mapper';
+import { Columna, Tarjeta } from '../data-access/model/pedido.model';
 import { Avatar } from '../../../shared/ui/avatar';
 
 const SIGUIENTE: Partial<Record<Columna, { columna: Columna; label: string }>> = {
@@ -25,16 +26,11 @@ export function tonoPedido(id: string): number {
   return (hash >>> 0) % 360;
 }
 
-const cordaje = ({ cuerda, tension, preestirado }: Cordaje) => {
-  const texto = `${cuerda} ${tension} kg`;
-  return preestirado ? `${texto} +${preestirado} %` : texto;
-};
-
 /** Una raqueta (o artículo de taller) del tablero, con lo justo para distinguirla de las demás. */
 
 @Component({
   selector: 'app-linea-card',
-  imports: [Avatar, DatePipe, StatusBadge],
+  imports: [Icon, Avatar, DatePipe, StatusBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Franja del color del pedido: separa visualmente pedidos con el mismo nº de raquetas -->
@@ -51,16 +47,28 @@ const cordaje = ({ cuerda, tension, preestirado }: Cordaje) => {
               {{ nombre() }}
             </button>
           </h3>
-          @if (tarjeta().total > 1) {
-            <span
-              class="badge badge-sm shrink-0"
-              data-testid="numero"
-              [style.border-color]="color()"
-              [style.background-color]="fondo()"
+          <div class="flex shrink-0 items-center gap-1">
+            @if (tarjeta().total > 1) {
+              <span
+                class="badge badge-sm"
+                data-testid="numero"
+                [style.border-color]="color()"
+                [style.background-color]="fondo()"
+              >
+                {{ tarjeta().numero }}/{{ tarjeta().total }}
+              </span>
+            }
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-square -me-1 -mt-0.5"
+              data-testid="codigos"
+              title="QR y código de barras: descargar o imprimir"
+              [attr.aria-label]="'Códigos de ' + raqueta() + ' de ' + nombre()"
+              (click)="codes.emit()"
             >
-              {{ tarjeta().numero }}/{{ tarjeta().total }}
-            </span>
-          }
+              <app-icon name="codigos" />
+            </button>
+          </div>
         </div>
 
         <p class="font-medium">{{ raqueta() }}</p>
@@ -157,6 +165,8 @@ export class LineaCard {
   /** Repite el pedido entero; cancelar, solo esta raqueta. */
   readonly repeat = output();
   readonly cancelRequest = output();
+  /** La etiqueta de esta raqueta (QR y código de barras), para descargar o imprimir. */
+  readonly codes = output();
 
   protected readonly linea = computed(() => this.tarjeta().linea);
   /**
@@ -180,17 +190,7 @@ export class LineaCard {
     return linea.cantidad > 1 ? `${linea.articulo} ×${linea.cantidad}` : linea.articulo;
   });
   /** La horizontal vacía o igual que la vertical no se repite. */
-  protected readonly cordajes = computed(() => {
-    const linea = this.linea();
-    if (linea.tipo !== 'encordado') return '';
-    const { vertical, horizontal } = linea;
-    const igual =
-      !horizontal.cuerda ||
-      (horizontal.cuerda === vertical.cuerda &&
-        horizontal.tension === vertical.tension &&
-        horizontal.preestirado === vertical.preestirado);
-    return igual ? cordaje(vertical) : `V: ${cordaje(vertical)} · H: ${cordaje(horizontal)}`;
-  });
+  protected readonly cordajes = computed(() => cordajesDe(this.linea()).join(' · '));
   protected readonly logo = computed(() => {
     const linea = this.linea();
     if (linea.tipo !== 'encordado' || !linea.logo) return null;
