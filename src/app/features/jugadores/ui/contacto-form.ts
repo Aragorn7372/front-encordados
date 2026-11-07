@@ -8,11 +8,10 @@ import {
   required,
   validate,
 } from '@angular/forms/signals';
-import { firstValueFrom } from 'rxjs';
 import { esEmail, opcional } from '../../../shared/utils/validacion';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
-import { JugadoresApi } from '../data-access/api/jugadores.api';
+import { JugadoresEscrituras } from '../data-access/store/jugadores-escrituras';
 import { toContactoRequest } from '../data-access/mapper/jugador.mapper';
 import { ContactoFormValue } from '../data-access/model/jugador.model';
 
@@ -53,10 +52,11 @@ import { ContactoFormValue } from '../data-access/model/jugador.model';
   `,
 })
 export class ContactoForm {
-  private readonly api = inject(JugadoresApi);
+  private readonly escrituras = inject(JugadoresEscrituras);
 
   readonly tournamentId = input.required<string>();
-  readonly created = output();
+  /** true: llegó al servidor; false: sin conexión, quedó en la cola. */
+  readonly created = output<boolean>();
   readonly cancelled = output();
 
   protected readonly model = signal<ContactoFormValue>({ nombre: '', email: '', telefono: '' });
@@ -78,10 +78,10 @@ export class ContactoForm {
       submission: {
         action: async (field) => {
           try {
-            await firstValueFrom(
-              this.api.createContact(toContactoRequest(field().value(), this.tournamentId())),
+            const enviado = await this.escrituras.crearContacto(
+              toContactoRequest(field().value(), this.tournamentId()),
             );
-            this.created.emit();
+            this.created.emit(enviado);
             return undefined;
           } catch (error) {
             return toFormErrors(error, field);

@@ -1,3 +1,5 @@
+import { provideOutboxDirecto } from '../../../core/offline/outbox.testing';
+import { jugadoresManejadores } from '../../../features/jugadores/jugadores.outbox';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { JugadoresApi } from '../data-access/api/jugadores.api';
@@ -16,7 +18,7 @@ const ana: Jugador = {
 describe('BonosForm', () => {
   const api = { addBonos: vi.fn(() => of({})) };
   let fixture: ComponentFixture<BonosForm>;
-  let guardados: number[];
+  let guardados: boolean[];
 
   const element = () => fixture.nativeElement as HTMLElement;
   const cantidad = async (valor: string) => {
@@ -34,7 +36,12 @@ describe('BonosForm', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    TestBed.configureTestingModule({ providers: [{ provide: JugadoresApi, useValue: api }] });
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: JugadoresApi, useValue: api },
+        provideOutboxDirecto(jugadoresManejadores),
+      ],
+    });
     fixture = TestBed.createComponent(BonosForm);
     fixture.componentRef.setInput('jugador', ana);
     guardados = [];
@@ -49,7 +56,7 @@ describe('BonosForm', () => {
     await enviar();
 
     expect(api.addBonos).toHaveBeenCalledWith('u2', 15);
-    expect(guardados).toEqual([25]);
+    expect(guardados).toEqual([true]);
   });
 
   it('no deja restar: el backend solo suma', async () => {

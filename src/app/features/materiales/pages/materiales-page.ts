@@ -14,6 +14,8 @@ import { MATERIALES_MAX } from '../data-access/api/materiales.api';
 import { TIPOS_MATERIAL, TipoMaterial } from '../data-access/dto/material.dto';
 import { Material, TIPO_MATERIAL_LABEL } from '../data-access/model/material.model';
 import { MaterialesStore } from '../data-access/store/materiales.store';
+import { MaterialesEscrituras } from '../data-access/store/materiales-escrituras';
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { MaterialForm } from '../ui/material-form';
 
 /** `undefined`: formulario cerrado. `null`: creando. Con valor: editando ese material. */
@@ -30,6 +32,7 @@ type Editing = Material | null | undefined;
     ExcelActions,
     Modal,
     PageHeader,
+    RequiereConexion,
     SearchInput,
     StockControl,
   ],
@@ -47,6 +50,7 @@ type Editing = Material | null | undefined;
         type="button"
         class="btn btn-primary"
         [disabled]="!store.tournamentId()"
+        appRequiereConexion="Para crear necesitas conexión: el servidor le da su número"
         (click)="editing.set(null)"
       >
         Nuevo material
@@ -130,7 +134,17 @@ type Editing = Material | null | undefined;
                         [src]="material.imagen"
                       />
                       <div>
-                        <div class="font-medium">{{ material.modelo }}</div>
+                        <div class="font-medium">
+                          {{ material.modelo }}
+                          @if (store.sinEnviar().has(material.id)) {
+                            <span
+                              class="badge badge-warning badge-soft badge-sm ml-1"
+                              title="Hecho sin conexión: se enviará al recuperarla"
+                            >
+                              Sin enviar
+                            </span>
+                          }
+                        </div>
                         <div class="text-xs opacity-60">{{ material.marca }}</div>
                       </div>
                     </div>
@@ -187,7 +201,7 @@ type Editing = Material | null | undefined;
         <app-material-form
           [tournamentId]="torneo"
           [material]="editing() ?? null"
-          (saved)="onSaved()"
+          (saved)="onSaved($event)"
           (cancelled)="editing.set(undefined)"
         />
       }
@@ -198,6 +212,7 @@ export default class MaterialesPage {
   protected readonly store = inject(MaterialesStore);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  private readonly escrituras = inject(MaterialesEscrituras);
 
   protected readonly editing = signal<Editing>(undefined);
   protected readonly tipos = TIPOS_MATERIAL;
@@ -214,9 +229,15 @@ export default class MaterialesPage {
     this.store.soloStockBajo.set((event.target as HTMLInputElement).checked);
   }
 
-  protected onSaved(): void {
-    this.toast.success(this.creando() ? 'Material creado' : 'Material actualizado');
+  /** `enviado` false: sin conexión, está en la cola (y ya se ve en la lista). */
+  protected onSaved(enviado: boolean): void {
+    const creando = this.creando();
     this.editing.set(undefined);
+    if (!enviado) {
+      this.toast.warning('Sin conexión: se ha guardado y se enviará al recuperarla');
+      return;
+    }
+    this.toast.success(creando ? 'Material creado' : 'Material actualizado');
     this.store.reload();
   }
 
@@ -230,10 +251,12 @@ export default class MaterialesPage {
     });
     if (!ok) return;
     try {
-      await this.store.remove(material.id);
-      this.toast.success('Material borrado');
+      if (await this.escrituras.borrar(material)) {
+        this.toast.success('Material borrado');
+        this.store.reload();
+      }
     } catch {
-      // El interceptor ya ha mostrado el error
+      // Ya se ha avisado del error
     }
   }
 }

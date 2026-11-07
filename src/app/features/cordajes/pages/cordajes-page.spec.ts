@@ -1,3 +1,5 @@
+import { provideOutboxDirecto } from '../../../core/offline/outbox.testing';
+import { cordajesManejadores } from '../../../features/cordajes/cordajes.outbox';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -52,6 +54,7 @@ describe('CordajesPage', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: CordajesApi, useValue: api },
+        provideOutboxDirecto(cordajesManejadores),
         { provide: ExcelApi, useValue: {} },
         { provide: TournamentContext, useValue: { selectedId: torneo } },
         { provide: ConfirmService, useValue: confirm },

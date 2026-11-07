@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormField, FormRoot, form, required } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -9,7 +10,7 @@ import { ROLES_ASIGNABLES, Usuario } from '../data-access/model/usuario.model';
 /** Dar rol a una cuenta sin rol (solo ADMIN). Solo roles válidos: el backend no lo comprueba. */
 @Component({
   selector: 'app-rol-form',
-  imports: [FormField, FormRoot],
+  imports: [RequiereConexion, FormField, FormRoot],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="form">
@@ -37,7 +38,7 @@ import { ROLES_ASIGNABLES, Usuario } from '../data-access/model/usuario.model';
 
       <div class="modal-action">
         <button type="button" class="btn" (click)="cancelled.emit()">Cancelar</button>
-        <button class="btn btn-primary" [disabled]="form().submitting()">
+        <button appRequiereConexion class="btn btn-primary" [disabled]="form().submitting()">
           Dar rol de {{ label[model().rol] }}
         </button>
       </div>

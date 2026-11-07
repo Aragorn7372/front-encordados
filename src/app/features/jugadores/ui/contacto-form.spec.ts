@@ -1,3 +1,5 @@
+import { provideOutboxDirecto } from '../../../core/offline/outbox.testing';
+import { jugadoresManejadores } from '../../../features/jugadores/jugadores.outbox';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { JugadoresApi } from '../data-access/api/jugadores.api';
@@ -24,7 +26,12 @@ describe('ContactoForm', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    TestBed.configureTestingModule({ providers: [{ provide: JugadoresApi, useValue: api }] });
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: JugadoresApi, useValue: api },
+        provideOutboxDirecto(jugadoresManejadores),
+      ],
+    });
     fixture = TestBed.createComponent(ContactoForm);
     fixture.componentRef.setInput('tournamentId', 't1');
     creados = 0;

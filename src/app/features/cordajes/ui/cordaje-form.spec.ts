@@ -1,3 +1,5 @@
+import { provideOutboxDirecto } from '../../../core/offline/outbox.testing';
+import { cordajesManejadores } from '../../../features/cordajes/cordajes.outbox';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { CordajesApi } from '../data-access/api/cordajes.api';
@@ -25,7 +27,12 @@ describe('CordajeForm', () => {
   const element = () => fixture.nativeElement as HTMLElement;
 
   const render = async (cordaje: Cordaje | null) => {
-    TestBed.configureTestingModule({ providers: [{ provide: CordajesApi, useValue: api }] });
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CordajesApi, useValue: api },
+        provideOutboxDirecto(cordajesManejadores),
+      ],
+    });
     fixture = TestBed.createComponent(CordajeForm);
     fixture.componentRef.setInput('tournamentId', 't1');
     fixture.componentRef.setInput('cordaje', cordaje);
@@ -66,7 +73,7 @@ describe('CordajeForm', () => {
 
     await enviar();
 
-    expect(api.update).toHaveBeenCalledWith(1, expect.objectContaining({ stock: 50 }), true);
+    expect(api.update).toHaveBeenCalledWith(1, expect.objectContaining({ stock: 50 }));
   });
 
   it('valida como el backend', async () => {

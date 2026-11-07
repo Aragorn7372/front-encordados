@@ -40,10 +40,13 @@ export class MaterialesApi {
       .pipe(map(toMaterial));
   }
 
-  /** Desde el formulario, `silencioso`: él pinta el error. Desde el ± de stock, el toast. */
-  update(id: number, value: MaterialFormValue, silencioso = false) {
+  /**
+   * Silencioso: lo envía la cola (ver MaterialesEscrituras), que avisa ella del error. El
+   * formulario lo pinta en línea y el ± de stock, en un toast.
+   */
+  update(id: number, value: MaterialFormValue) {
     return this.http
-      .put<MaterialDto>(`${BASE}/${id}`, toMaterialFormData(value), silencioso ? silent() : {})
+      .put<MaterialDto>(`${BASE}/${id}`, toMaterialFormData(value), silent())
       .pipe(map(toMaterial));
   }
 

@@ -20,11 +20,15 @@ export function esTemporal(id: string | null | undefined): boolean {
   return !!id && id.startsWith(PREFIJO);
 }
 
+/** Objetos de datos, no un File, un Blob o una fecha: esos se guardan y se envían tal cual. */
+const esPlano = (valor: unknown): valor is Record<string, unknown> =>
+  !!valor && typeof valor === 'object' && Object.getPrototypeOf(valor) === Object.prototype;
+
 /** Cambia en el payload los ids temporales que ya tienen id real. */
 export function sustituirIds<P>(payload: P, ids: Record<string, string>): P {
   if (typeof payload === 'string') return (ids[payload] ?? payload) as P;
   if (Array.isArray(payload)) return payload.map((v) => sustituirIds(v, ids)) as P;
-  if (payload && typeof payload === 'object') {
+  if (esPlano(payload)) {
     return Object.fromEntries(
       Object.entries(payload).map(([k, v]) => [k, sustituirIds(v, ids)]),
     ) as P;
@@ -36,7 +40,7 @@ export function sustituirIds<P>(payload: P, ids: Record<string, string>): P {
 export function temporalesEn(payload: unknown): string[] {
   if (typeof payload === 'string') return esTemporal(payload) ? [payload] : [];
   if (Array.isArray(payload)) return payload.flatMap(temporalesEn);
-  if (payload && typeof payload === 'object') return Object.values(payload).flatMap(temporalesEn);
+  if (esPlano(payload)) return Object.values(payload).flatMap(temporalesEn);
   return [];
 }
 

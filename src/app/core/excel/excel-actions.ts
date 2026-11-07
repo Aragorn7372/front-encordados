@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../shared/ui/requiere-conexion';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Modal } from '../../shared/ui/modal';
@@ -18,7 +19,7 @@ interface Informe {
  */
 @Component({
   selector: 'app-excel-actions',
-  imports: [Modal],
+  imports: [RequiereConexion, Modal],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="join">
@@ -26,6 +27,7 @@ interface Informe {
         type="button"
         class="btn join-item"
         [disabled]="!tournamentId() || exportando()"
+        appRequiereConexion="El Excel necesita conexión"
         (click)="exportar()"
       >
         @if (exportando()) {
@@ -35,6 +37,7 @@ interface Informe {
       </button>
       @if (conImportar() && !simple()) {
         <label
+          appRequiereConexion="El Excel necesita conexión"
           class="btn join-item"
           [class.btn-disabled]="!tournamentId() || importando()"
           [attr.aria-disabled]="!tournamentId() || importando()"

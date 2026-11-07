@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
@@ -18,7 +19,7 @@ import { PerfilForm } from '../ui/perfil-form';
 /** Los datos propios, la contraseña y borrar la cuenta. Para todos los roles. */
 @Component({
   selector: 'app-perfil-page',
-  imports: [Avatar, CurrencyPipe, PageHeader, PerfilForm],
+  imports: [RequiereConexion, Avatar, CurrencyPipe, PageHeader, PerfilForm],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header heading="Mi perfil" />
@@ -70,7 +71,9 @@ import { PerfilForm } from '../ui/perfil-form';
             [value]="emailClave()"
             (input)="onEmailClave($event)"
           />
-          <button class="btn" [disabled]="!emailValido() || enviando()">Enviar enlace</button>
+          <button appRequiereConexion class="btn" [disabled]="!emailValido() || enviando()">
+            Enviar enlace
+          </button>
         </form>
         @if (enlace(); as mensaje) {
           <p class="text-sm" role="status">{{ mensaje }}</p>
@@ -83,7 +86,12 @@ import { PerfilForm } from '../ui/perfil-form';
         <h2 id="perfil-borrar" class="card-title text-error text-base">Borrar mi cuenta</h2>
         <p class="text-sm opacity-70">No podrás volver a entrar con esta cuenta.</p>
         <div>
-          <button type="button" class="btn btn-error btn-outline" (click)="borrar()">
+          <button
+            type="button"
+            class="btn btn-error btn-outline"
+            appRequiereConexion
+            (click)="borrar()"
+          >
             Borrar mi cuenta
           </button>
         </div>

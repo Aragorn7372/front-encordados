@@ -1,3 +1,5 @@
+import { provideOutboxDirecto } from '../../../../core/offline/outbox.testing';
+import { materialesManejadores } from '../../../../features/materiales/materiales.outbox';
 import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -31,6 +33,7 @@ describe('MaterialesStore', () => {
       providers: [
         MaterialesStore,
         { provide: MaterialesApi, useValue: api },
+        provideOutboxDirecto(materialesManejadores),
         { provide: TournamentContext, useValue: { selectedId } },
       ],
     });

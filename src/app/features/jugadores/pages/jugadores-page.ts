@@ -13,6 +13,8 @@ import { JUGADORES_MAX } from '../data-access/api/jugadores.api';
 import { textoContactos } from '../data-access/mapper/jugador.mapper';
 import { Jugador } from '../data-access/model/jugador.model';
 import { JugadoresStore } from '../data-access/store/jugadores.store';
+import { JugadoresEscrituras } from '../data-access/store/jugadores-escrituras';
+import { esTemporal } from '../../../core/offline/outbox';
 import { BonosForm } from '../ui/bonos-form';
 import { ContactoForm } from '../ui/contacto-form';
 import { JugadorEdicion } from '../ui/jugador-edicion';
@@ -127,7 +129,17 @@ const TITULOS: Record<Accion['tipo'], string> = {
                     <div class="flex items-center gap-3">
                       <app-avatar [url]="jugador.imagen" [nombre]="jugador.nombre" />
                       <div>
-                        <div class="font-medium">{{ jugador.nombre }}</div>
+                        <div class="font-medium">
+                          {{ jugador.nombre }}
+                          @if (store.sinEnviar().has(jugador.id)) {
+                            <span
+                              class="badge badge-warning badge-soft badge-sm ml-1"
+                              title="Hecho sin conexión: se enviará al recuperarla"
+                            >
+                              Sin enviar
+                            </span>
+                          }
+                        </div>
                         @if (jugador.username) {
                           <div class="text-xs opacity-60">{{ jugador.username }}</div>
                         }
@@ -143,33 +155,38 @@ const TITULOS: Record<Accion['tipo'], string> = {
                   </td>
                   <td class="text-right tabular-nums">{{ jugador.bonos | currency: 'EUR' }}</td>
                   <td class="text-right whitespace-nowrap">
-                    @if (puedeBonos()) {
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs"
-                        [attr.aria-label]="'Añadir bonos a ' + jugador.nombre"
-                        (click)="accion.set({ tipo: 'bonos', jugador })"
-                      >
-                        + Bonos
-                      </button>
-                    }
-                    @if (esAdmin()) {
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs"
-                        [attr.aria-label]="'Editar a ' + jugador.nombre"
-                        (click)="accion.set({ tipo: 'editar', jugador })"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs text-error"
-                        [attr.aria-label]="'Borrar a ' + jugador.nombre"
-                        (click)="borrar(jugador)"
-                      >
-                        Borrar
-                      </button>
+                    @if (esTemporal(jugador.id)) {
+                      <!-- Aún no existe en el servidor: no tiene id con el que editarlo -->
+                      <span class="text-xs opacity-60">Al enviarse podrás editarlo</span>
+                    } @else {
+                      @if (puedeBonos()) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs"
+                          [attr.aria-label]="'Añadir bonos a ' + jugador.nombre"
+                          (click)="accion.set({ tipo: 'bonos', jugador })"
+                        >
+                          + Bonos
+                        </button>
+                      }
+                      @if (esAdmin()) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs"
+                          [attr.aria-label]="'Editar a ' + jugador.nombre"
+                          (click)="accion.set({ tipo: 'editar', jugador })"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs text-error"
+                          [attr.aria-label]="'Borrar a ' + jugador.nombre"
+                          (click)="borrar(jugador)"
+                        >
+                          Borrar
+                        </button>
+                      }
                     }
                   </td>
                 </tr>
@@ -193,7 +210,7 @@ const TITULOS: Record<Accion['tipo'], string> = {
           @if (store.tournamentId(); as torneo) {
             <app-contacto-form
               [tournamentId]="torneo"
-              (created)="terminar('Jugador creado')"
+              (created)="terminar('Jugador creado', $event)"
               (cancelled)="accion.set(null)"
             />
           }
@@ -201,14 +218,14 @@ const TITULOS: Record<Accion['tipo'], string> = {
         @case ('bonos') {
           <app-bonos-form
             [jugador]="jugadorAbierto()!"
-            (saved)="terminar('Bonos añadidos')"
+            (saved)="terminar('Bonos añadidos', $event)"
             (cancelled)="accion.set(null)"
           />
         }
         @case ('editar') {
           <app-jugador-edicion
             [jugador]="jugadorAbierto()!"
-            (saved)="terminar('Jugador actualizado')"
+            (saved)="terminar('Jugador actualizado', $event)"
             (cancelled)="accion.set(null)"
           />
         }
@@ -221,6 +238,7 @@ export default class JugadoresPage {
   private readonly auth = inject(AuthStore);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  private readonly escrituras = inject(JugadoresEscrituras);
 
   protected readonly limite = JUGADORES_MAX;
   protected readonly accion = signal<Accion | null>(null);
@@ -237,9 +255,15 @@ export default class JugadoresPage {
   protected readonly puedeBonos = computed(() => this.auth.hasRole('ADMIN', 'OWNER'));
   protected readonly puedeExcel = computed(() => this.auth.hasRole('ADMIN', 'OWNER'));
   protected readonly esAdmin = computed(() => this.auth.hasRole('ADMIN'));
+  protected readonly esTemporal = esTemporal;
 
-  protected terminar(mensaje: string): void {
+  /** `enviado` false: sin conexión, está en la cola (y ya se ve en la lista). */
+  protected terminar(mensaje: string, enviado: boolean): void {
     this.accion.set(null);
+    if (!enviado) {
+      this.toast.warning('Sin conexión: se ha guardado y se enviará al recuperarla');
+      return;
+    }
     this.toast.success(mensaje);
     this.store.reload();
   }
@@ -264,10 +288,12 @@ export default class JugadoresPage {
     });
     if (!ok) return;
     try {
-      await this.store.remove(jugador.id);
-      this.toast.success('Jugador borrado');
+      if (await this.escrituras.borrar(jugador)) {
+        this.toast.success('Jugador borrado');
+        this.store.reload();
+      }
     } catch {
-      // El interceptor ya ha mostrado el error
+      // Ya se ha avisado del error
     }
   }
 }

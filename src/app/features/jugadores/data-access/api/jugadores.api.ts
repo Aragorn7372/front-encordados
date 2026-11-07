@@ -4,6 +4,7 @@ import { map } from 'rxjs';
 import { toFormData } from '../../../../core/http/form-data';
 import { SILENT_ERRORS } from '../../../../core/http/error.interceptor';
 import { PageResponse, toPageParams } from '../../../../shared/models/page';
+import { ContactoCreado } from '../../../../shared/models/contacto-pendiente';
 import { ContactoRequest, JugadorDto } from '../dto/jugador.dto';
 import { toJugador } from '../mapper/jugador.mapper';
 import { JugadorEdicionValue } from '../model/jugador.model';
@@ -33,7 +34,7 @@ export class JugadoresApi {
   }
 
   createContact(request: ContactoRequest) {
-    return this.http.post<unknown>(`${BASE}/create-contact`, request, silent());
+    return this.http.post<ContactoCreado>(`${BASE}/create-contact`, request, silent());
   }
 
   /** El backend solo suma (cantidad > 0) y solo deja a OWNER y ADMIN (ENCUERDATU-64). */

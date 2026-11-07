@@ -13,6 +13,7 @@ import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
 import { FilePicker } from '../../../shared/ui/file-picker';
 import { CordajesApi } from '../data-access/api/cordajes.api';
+import { CordajesEscrituras } from '../data-access/store/cordajes-escrituras';
 import { FORMATOS_CUERDA, TIPOS_CUERDA } from '../data-access/dto/cordaje.dto';
 import { toCordajeFormValue } from '../data-access/mapper/cordaje.mapper';
 import {
@@ -112,10 +113,12 @@ type Campos = Omit<CordajeFormValue, 'imagen'>;
 })
 export class CordajeForm implements OnInit {
   private readonly api = inject(CordajesApi);
+  private readonly escrituras = inject(CordajesEscrituras);
 
   readonly tournamentId = input.required<string>();
   readonly cordaje = input<Cordaje | null>(null);
-  readonly saved = output<Cordaje>();
+  /** true: llegó al servidor; false: sin conexión, la edición quedó en la cola. */
+  readonly saved = output<boolean>();
   readonly cancelled = output();
 
   protected readonly tipos = TIPOS_CUERDA;
@@ -153,12 +156,13 @@ export class CordajeForm implements OnInit {
           const value: CordajeFormValue = { ...field().value(), imagen: this.imagen() };
           const actual = this.cordaje();
           try {
-            const guardado = await firstValueFrom(
-              actual
-                ? this.api.update(actual.id, value, true)
-                : this.api.create(this.tournamentId(), value),
-            );
-            this.saved.emit(guardado);
+            if (actual) {
+              this.saved.emit((await this.escrituras.editar(actual, value)) !== null);
+            } else {
+              // Crear pide conexión (el botón «Nuevo cordaje» se desactiva sin ella)
+              await firstValueFrom(this.api.create(this.tournamentId(), value));
+              this.saved.emit(true);
+            }
             return undefined;
           } catch (error) {
             return toFormErrors(error, field);

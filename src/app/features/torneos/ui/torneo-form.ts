@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,7 +22,7 @@ import { toDateInput } from '../data-access/mapper/torneos.mapper';
 
 @Component({
   selector: 'app-torneo-form',
-  imports: [FormField, FormRoot, FieldError, FilePicker],
+  imports: [RequiereConexion, FormField, FormRoot, FieldError, FilePicker],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="form">
@@ -74,7 +75,9 @@ import { toDateInput } from '../data-access/mapper/torneos.mapper';
 
       <div class="modal-action">
         <button type="button" class="btn" (click)="cancelled.emit()">Cancelar</button>
-        <button class="btn btn-primary" [disabled]="form().submitting()">Guardar</button>
+        <button appRequiereConexion class="btn btn-primary" [disabled]="form().submitting()">
+          Guardar
+        </button>
       </div>
     </form>
   `,

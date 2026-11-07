@@ -38,10 +38,13 @@ export class CordajesApi {
       .pipe(map(toCordaje));
   }
 
-  /** Desde el formulario, `silencioso`: él pinta el error. Desde el ± de stock, el toast. */
-  update(id: number, value: CordajeFormValue, silencioso = false) {
+  /**
+   * Silencioso: lo envía la cola (ver CordajesEscrituras), que avisa ella del error. El
+   * formulario lo pinta en línea y el ± de stock, en un toast.
+   */
+  update(id: number, value: CordajeFormValue) {
     return this.http
-      .put<CuerdaDto>(`${BASE}/${id}`, toCuerdaFormData(value), silencioso ? silent() : {})
+      .put<CuerdaDto>(`${BASE}/${id}`, toCuerdaFormData(value), silent())
       .pipe(map(toCordaje));
   }
 

@@ -1,3 +1,8 @@
+import { WritableSignal } from '@angular/core';
+import { Operacion } from '../../../core/offline/outbox';
+import { OutboxService } from '../../../core/offline/outbox.service';
+import { OP_CONTACTO_CREAR } from '../../../shared/models/contacto-pendiente';
+import { provideOutboxDirecto } from '../../../core/offline/outbox.testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideEscriturasDirectas } from '../data-access/store/pedidos-escrituras.testing';
 import { of } from 'rxjs';
@@ -42,6 +47,7 @@ describe('PedidoForm', () => {
       providers: [
         { provide: PedidosApi, useValue: api },
         provideEscriturasDirectas(api),
+        provideOutboxDirecto(),
         {
           provide: AuthStore,
           useValue: {
@@ -54,6 +60,30 @@ describe('PedidoForm', () => {
     fixture = TestBed.createComponent(PedidoForm);
     fixture.componentRef.setInput('tournamentId', 't1');
     await fixture.whenStable();
+  });
+
+  it('se puede elegir un jugador creado sin conexión que aún no se ha enviado', async () => {
+    const pendientes = TestBed.inject(OutboxService).pendientes as WritableSignal<Operacion[]>;
+    pendientes.set([
+      {
+        id: 1,
+        tipo: OP_CONTACTO_CREAR,
+        payload: {
+          tempId: 'tmp-9',
+          request: { name: 'Luis', email: null, phone: null, tournamentId: 't1' },
+        },
+        descripcion: '',
+        creadaEn: 0,
+        estado: 'pendiente',
+        intentos: 0,
+      },
+    ]);
+    await fixture.whenStable();
+
+    const opciones = [...element().querySelectorAll('#pedido-jugador option')];
+    expect(opciones.find((o) => o.textContent?.includes('Luis'))?.getAttribute('value')).toBe(
+      'tmp-9',
+    );
   });
 
   it('al elegir encordador se pone su máquina', async () => {
@@ -168,6 +198,7 @@ describe('PedidoForm como ENCORDER', () => {
       providers: [
         { provide: PedidosApi, useValue: api },
         provideEscriturasDirectas(api),
+        provideOutboxDirecto(),
         {
           provide: AuthStore,
           useValue: {

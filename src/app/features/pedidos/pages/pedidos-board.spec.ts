@@ -1,3 +1,4 @@
+import { provideOutboxDirecto } from '../../../core/offline/outbox.testing';
 import { signal } from '@angular/core';
 import { provideEscriturasDirectas } from '../data-access/store/pedidos-escrituras.testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -89,6 +90,7 @@ describe('PedidosBoard', () => {
         { provide: RealtimeService, useValue: { status: realtime } },
         { provide: PedidosApi, useValue: api },
         provideEscriturasDirectas(api),
+        provideOutboxDirecto(),
         { provide: AuthStore, useValue: { hasRole: () => true, username: () => 'carlos' } },
         { provide: TournamentContext, useValue: { selectedId: torneo } },
         { provide: ConfirmService, useValue: confirm },

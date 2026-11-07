@@ -39,6 +39,8 @@ import {
 import { toPurchasedRequest } from '../data-access/mapper/pedido-request';
 import { JugadorOpcion, PedidosApi } from '../data-access/api/pedidos.api';
 import { PedidoCreado, PedidosEscrituras } from '../data-access/store/pedidos-escrituras';
+import { OutboxService } from '../../../core/offline/outbox.service';
+import { contactosPendientes } from '../../../shared/models/contacto-pendiente';
 import { ContactoRapido } from './contacto-rapido';
 
 const maquinaGuardada = (tournamentId: string) => `etr_maquina:${tournamentId}`;
@@ -52,6 +54,7 @@ const maquinaGuardada = (tournamentId: string) => `etr_maquina:${tournamentId}`;
 export class PedidoForm implements OnInit {
   private readonly api = inject(PedidosApi);
   private readonly escrituras = inject(PedidosEscrituras);
+  private readonly outbox = inject(OutboxService);
   private readonly auth = inject(AuthStore);
 
   readonly tournamentId = input.required<string>();
@@ -81,10 +84,17 @@ export class PedidoForm implements OnInit {
   protected readonly cargado = computed(() => this.datos.hasValue());
   private readonly jugadoresCreados = signal<JugadorOpcion[]>([]);
   protected readonly jugadores = computed(() => {
-    const lista = [
+    // Creados sin conexión y aún sin enviar: con su username real si ya lo tienen
+    const ids = this.outbox.ids();
+    const sinEnviar = contactosPendientes(this.outbox.pendientes(), this.tournamentId()).map(
+      ({ tempId, request }) => ({ username: ids[tempId] ?? tempId, name: request.name, bonos: 0 }),
+    );
+    const todos = [
       ...this.jugadoresCreados(),
+      ...sinEnviar,
       ...(this.datos.hasValue() ? this.datos.value().jugadores : []),
     ];
+    const lista = todos.filter((j, i) => todos.findIndex((o) => o.username === j.username) === i);
     const extra = this.jugadorExtra();
     return extra && !lista.some((j) => j.username === extra.username) ? [extra, ...lista] : lista;
   });

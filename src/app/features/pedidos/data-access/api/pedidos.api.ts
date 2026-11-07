@@ -117,21 +117,6 @@ export class PedidosApi {
     );
   }
 
-  createContact(tournamentId: string, name: string, phone: string, email: string) {
-    return this.http
-      .post<UsuarioDto>(
-        '/api/user/create-contact',
-        {
-          name: name.trim(),
-          phone: phone.trim() || null,
-          email: email.trim() || null,
-          tournamentId,
-        },
-        silent(),
-      )
-      .pipe(map(({ username, name, bonos }): JugadorOpcion => ({ username, name, bonos })));
-  }
-
   get(id: string) {
     return this.http.get<PurchasedDto>(`${BASE}/${id}`).pipe(map(toPedido));
   }

@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthStore } from '../../../core/auth/store/auth.store';
@@ -23,7 +24,17 @@ import { Avatar } from '../../../shared/ui/avatar';
 
 @Component({
   selector: 'app-usuarios-page',
-  imports: [SinDatos, Avatar, BackupPanel, Modal, PageHeader, RolForm, RouterLink, SearchInput],
+  imports: [
+    RequiereConexion,
+    SinDatos,
+    Avatar,
+    BackupPanel,
+    Modal,
+    PageHeader,
+    RolForm,
+    RouterLink,
+    SearchInput,
+  ],
   providers: [UsuariosStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -111,6 +122,7 @@ import { Avatar } from '../../../shared/ui/avatar';
                         type="button"
                         class="btn btn-ghost btn-xs"
                         [attr.aria-label]="'Dar rol a ' + usuario.nombre"
+                        appRequiereConexion
                         (click)="dandoRol.set(usuario)"
                       >
                         Dar rol
@@ -120,6 +132,7 @@ import { Avatar } from '../../../shared/ui/avatar';
                         type="button"
                         class="btn btn-ghost btn-xs"
                         [attr.aria-label]="'Hacer encordador a ' + usuario.nombre"
+                        appRequiereConexion
                         (click)="hacerEncordador(usuario)"
                       >
                         Hacer encordador
@@ -134,6 +147,7 @@ import { Avatar } from '../../../shared/ui/avatar';
                       type="button"
                       class="btn btn-ghost btn-xs text-error"
                       [attr.aria-label]="'Borrar a ' + usuario.nombre"
+                      appRequiereConexion
                       (click)="borrar(usuario)"
                     >
                       Borrar

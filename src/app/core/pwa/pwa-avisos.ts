@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { OfflineState } from '../offline/offline-state';
+import { injectSinConexion } from '../offline/sin-conexion';
 import { PwaService } from './pwa.service';
 
 /**
@@ -37,7 +38,7 @@ import { PwaService } from './pwa.service';
             } @else {
               Ves lo último que se cargó.
             }
-            Lo que hagas en pedidos se guarda y se enviará al recuperarla; el resto necesita
+            Pedidos, jugadores y stock se guardan y se enviarán al recuperarla; lo demás necesita
             conexión.
           </span>
         </div>
@@ -56,7 +57,5 @@ export class PwaAvisos {
   protected readonly offline = inject(OfflineState);
 
   /** El navegador sin red, o con «red» pero sin que el servidor conteste (poca cobertura). */
-  protected readonly sinConexion = computed(
-    () => !this.pwa.conectado() || this.offline.sinServidor(),
-  );
+  protected readonly sinConexion = injectSinConexion();
 }

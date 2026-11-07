@@ -8,11 +8,10 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, FormRoot, form, minLength, required, validate } from '@angular/forms/signals';
-import { firstValueFrom } from 'rxjs';
 import { esEmail, esTelefono, opcional } from '../../../shared/utils/validacion';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
-import { JugadoresApi } from '../data-access/api/jugadores.api';
+import { JugadoresEscrituras } from '../data-access/store/jugadores-escrituras';
 import { Jugador, JugadorEdicionValue } from '../data-access/model/jugador.model';
 
 /** Edición de un jugador. Solo ADMIN: el backend no deja a nadie más (ENCUERDATU-65). */
@@ -55,10 +54,11 @@ import { Jugador, JugadorEdicionValue } from '../data-access/model/jugador.model
   `,
 })
 export class JugadorEdicion implements OnInit {
-  private readonly api = inject(JugadoresApi);
+  private readonly escrituras = inject(JugadoresEscrituras);
 
   readonly jugador = input.required<Jugador>();
-  readonly saved = output();
+  /** true: llegó al servidor; false: sin conexión, quedó en la cola. */
+  readonly saved = output<boolean>();
   readonly cancelled = output();
 
   private readonly model = signal<JugadorEdicionValue>({ nombre: '', email: '', telefono: '' });
@@ -83,8 +83,7 @@ export class JugadorEdicion implements OnInit {
       submission: {
         action: async (field) => {
           try {
-            await firstValueFrom(this.api.update(this.jugador().id, field().value()));
-            this.saved.emit();
+            this.saved.emit(await this.escrituras.editar(this.jugador(), field().value()));
             return undefined;
           } catch (error) {
             return toFormErrors(error, field);

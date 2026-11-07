@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -20,7 +21,7 @@ import { Avatar } from '../../../shared/ui/avatar';
 
 @Component({
   selector: 'app-workers-panel',
-  imports: [Avatar, FormField, FormRoot, FieldError],
+  imports: [RequiereConexion, Avatar, FormField, FormRoot, FieldError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bg-base-200 rounded-box p-4">
@@ -45,6 +46,7 @@ import { Avatar } from '../../../shared/ui/avatar';
                 type="button"
                 class="btn btn-ghost btn-sm"
                 [attr.aria-label]="'Quitar a ' + row.username"
+                appRequiereConexion
                 (click)="remove(row.username)"
               >
                 Quitar
@@ -77,7 +79,11 @@ import { Avatar } from '../../../shared/ui/avatar';
             <div role="alert" class="alert alert-error alert-soft mt-2">{{ error.message }}</div>
           }
 
-          <button class="btn btn-primary btn-sm mt-3" [disabled]="form().submitting()">
+          <button
+            appRequiereConexion
+            class="btn btn-primary btn-sm mt-3"
+            [disabled]="form().submitting()"
+          >
             Añadir
           </button>
         </form>

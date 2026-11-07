@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -31,7 +32,7 @@ import { PerfilActual, PerfilFormValue } from '../data-access/model/perfil.model
 /** Los datos propios y la foto. Solo se envía lo que cambia. */
 @Component({
   selector: 'app-perfil-form',
-  imports: [FormField, FormRoot, FieldError, FilePicker],
+  imports: [RequiereConexion, FormField, FormRoot, FieldError, FilePicker],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="form">
@@ -95,7 +96,11 @@ import { PerfilActual, PerfilFormValue } from '../data-access/model/perfil.model
       }
 
       <div class="mt-4 flex justify-end">
-        <button class="btn btn-primary" [disabled]="!cambios() || form().submitting()">
+        <button
+          appRequiereConexion
+          class="btn btn-primary"
+          [disabled]="!cambios() || form().submitting()"
+        >
           Guardar cambios
         </button>
       </div>

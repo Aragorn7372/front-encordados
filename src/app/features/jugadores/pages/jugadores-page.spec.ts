@@ -1,3 +1,5 @@
+import { provideOutboxDirecto } from '../../../core/offline/outbox.testing';
+import { jugadoresManejadores } from '../../../features/jugadores/jugadores.outbox';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -48,6 +50,7 @@ describe('JugadoresPage', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: JugadoresApi, useValue: api },
+        provideOutboxDirecto(jugadoresManejadores),
         { provide: ExcelApi, useValue: {} },
         { provide: TournamentContext, useValue: { selectedId: torneo } },
         { provide: ConfirmService, useValue: confirm },

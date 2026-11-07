@@ -14,6 +14,8 @@ import { CORDAJES_MAX } from '../data-access/api/cordajes.api';
 import { TIPOS_CUERDA, TipoCuerda } from '../data-access/dto/cordaje.dto';
 import { Cordaje, FORMATO_LABEL, TIPO_LABEL } from '../data-access/model/cordaje.model';
 import { CordajesStore } from '../data-access/store/cordajes.store';
+import { CordajesEscrituras } from '../data-access/store/cordajes-escrituras';
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { CordajeForm } from '../ui/cordaje-form';
 
 /** `undefined`: formulario cerrado. `null`: creando. Con valor: editando ese cordaje. */
@@ -31,6 +33,7 @@ type Editing = Cordaje | null | undefined;
     ExcelActions,
     Modal,
     PageHeader,
+    RequiereConexion,
     SearchInput,
     StockControl,
   ],
@@ -48,6 +51,7 @@ type Editing = Cordaje | null | undefined;
         type="button"
         class="btn btn-primary"
         [disabled]="!store.tournamentId()"
+        appRequiereConexion="Para crear necesitas conexión: el servidor le da su número"
         (click)="editing.set(null)"
       >
         Nuevo cordaje
@@ -132,7 +136,17 @@ type Editing = Cordaje | null | undefined;
                         [src]="cordaje.imagen"
                       />
                       <div>
-                        <div class="font-medium">{{ cordaje.modelo }}</div>
+                        <div class="font-medium">
+                          {{ cordaje.modelo }}
+                          @if (store.sinEnviar().has(cordaje.id)) {
+                            <span
+                              class="badge badge-warning badge-soft badge-sm ml-1"
+                              title="Hecho sin conexión: se enviará al recuperarla"
+                            >
+                              Sin enviar
+                            </span>
+                          }
+                        </div>
                         <div class="text-xs opacity-60">{{ cordaje.marca }}</div>
                       </div>
                     </div>
@@ -193,7 +207,7 @@ type Editing = Cordaje | null | undefined;
         <app-cordaje-form
           [tournamentId]="torneo"
           [cordaje]="editing() ?? null"
-          (saved)="onSaved()"
+          (saved)="onSaved($event)"
           (cancelled)="editing.set(undefined)"
         />
       }
@@ -204,6 +218,7 @@ export default class CordajesPage {
   protected readonly store = inject(CordajesStore);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  private readonly escrituras = inject(CordajesEscrituras);
 
   protected readonly editing = signal<Editing>(undefined);
   protected readonly tipos = TIPOS_CUERDA;
@@ -221,9 +236,15 @@ export default class CordajesPage {
     this.store.soloStockBajo.set((event.target as HTMLInputElement).checked);
   }
 
-  protected onSaved(): void {
-    this.toast.success(this.creando() ? 'Cordaje creado' : 'Cordaje actualizado');
+  /** `enviado` false: sin conexión, está en la cola (y ya se ve en la lista). */
+  protected onSaved(enviado: boolean): void {
+    const creando = this.creando();
     this.editing.set(undefined);
+    if (!enviado) {
+      this.toast.warning('Sin conexión: se ha guardado y se enviará al recuperarla');
+      return;
+    }
+    this.toast.success(creando ? 'Cordaje creado' : 'Cordaje actualizado');
     this.store.reload();
   }
 
@@ -237,10 +258,12 @@ export default class CordajesPage {
     });
     if (!ok) return;
     try {
-      await this.store.remove(cordaje.id);
-      this.toast.success('Cordaje borrado');
+      if (await this.escrituras.borrar(cordaje)) {
+        this.toast.success('Cordaje borrado');
+        this.store.reload();
+      }
     } catch {
-      // El interceptor ya ha mostrado el error
+      // Ya se ha avisado del error
     }
   }
 }

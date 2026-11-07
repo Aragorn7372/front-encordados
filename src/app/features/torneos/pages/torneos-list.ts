@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AuthStore } from '../../../core/auth/store/auth.store';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
@@ -19,6 +20,7 @@ type Editing = TournamentSummary | null | undefined;
 @Component({
   selector: 'app-torneos-list',
   imports: [
+    RequiereConexion,
     SinDatos,
     EmptyState,
     Modal,
@@ -33,7 +35,12 @@ type Editing = TournamentSummary | null | undefined;
   template: `
     <app-page-header heading="Torneos">
       @if (canManage()) {
-        <button type="button" class="btn btn-primary" (click)="editing.set(null)">
+        <button
+          type="button"
+          class="btn btn-primary"
+          appRequiereConexion
+          (click)="editing.set(null)"
+        >
           Nuevo torneo
         </button>
       }

@@ -1,7 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { esTemporal, idTemporal } from '../../../../core/offline/outbox';
 import { OutboxService } from '../../../../core/offline/outbox.service';
+import {
+  ContactoCreado,
+  CrearContacto,
+  OP_CONTACTO_CREAR,
+} from '../../../../shared/models/contacto-pendiente';
 import { LineStatus } from '../../../../shared/models/status';
+import { JugadorOpcion } from '../api/pedidos.api';
 import { PedidoLineaDto } from '../dto/pedido.dto';
 import { describir, vistaPrevia } from '../mapper/pedido-pendiente';
 import { toPedido } from '../mapper/pedido.mapper';
@@ -53,6 +59,36 @@ export class PedidosEscrituras {
     return resultado.enviada
       ? { pedido: resultado.respuesta, enviado: true }
       : { pedido: toPedido(vista), enviado: false };
+  }
+
+  /**
+   * El «+» junto al jugador. Sin conexión queda en la cola y se puede usar ya en el pedido: su
+   * id temporal hace de username, y la cola lo cambia por el real antes de enviar el pedido.
+   */
+  async crearContacto(
+    tournamentId: string,
+    nombre: string,
+    telefono: string,
+    email: string,
+  ): Promise<JugadorOpcion> {
+    const payload: CrearContacto = {
+      tempId: idTemporal(),
+      request: {
+        name: nombre.trim(),
+        phone: telefono.trim() || null,
+        email: email.trim() || null,
+        tournamentId,
+      },
+    };
+    const resultado = await this.outbox.ejecutar<ContactoCreado>(
+      OP_CONTACTO_CREAR,
+      payload,
+      `Nuevo jugador: ${payload.request.name}`,
+    );
+    if (!resultado.enviada)
+      return { username: payload.tempId, name: payload.request.name, bonos: 0 };
+    const { username, name, bonos } = resultado.respuesta;
+    return { username, name, bonos };
   }
 
   async estadoLinea(

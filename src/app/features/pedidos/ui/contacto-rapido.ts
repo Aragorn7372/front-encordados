@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormField, FormRoot, email, form, minLength, required } from '@angular/forms/signals';
-import { firstValueFrom } from 'rxjs';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
-import { JugadorOpcion, PedidosApi } from '../data-access/api/pedidos.api';
+import { JugadorOpcion } from '../data-access/api/pedidos.api';
+import { PedidosEscrituras } from '../data-access/store/pedidos-escrituras';
 
 /** Formulario propio: anidarlo en el del pedido mezclaría sus validaciones y su envío. */
 @Component({
@@ -54,7 +54,7 @@ import { JugadorOpcion, PedidosApi } from '../data-access/api/pedidos.api';
   `,
 })
 export class ContactoRapido {
-  private readonly api = inject(PedidosApi);
+  private readonly escrituras = inject(PedidosEscrituras);
 
   readonly tournamentId = input.required<string>();
   readonly created = output<JugadorOpcion>();
@@ -74,8 +74,11 @@ export class ContactoRapido {
         action: async (field) => {
           const { nombre, telefono, email: correo } = field().value();
           try {
-            const jugador = await firstValueFrom(
-              this.api.createContact(this.tournamentId(), nombre, telefono, correo),
+            const jugador = await this.escrituras.crearContacto(
+              this.tournamentId(),
+              nombre,
+              telefono,
+              correo,
             );
             this.created.emit(jugador);
             return undefined;

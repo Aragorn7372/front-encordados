@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
@@ -18,7 +19,7 @@ export const PALABRA_RESTAURAR = 'RESTAURAR';
  */
 @Component({
   selector: 'app-backup-panel',
-  imports: [DatePipe],
+  imports: [RequiereConexion, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="card bg-base-200 mt-6" aria-labelledby="backup-titulo">
@@ -29,13 +30,19 @@ export const PALABRA_RESTAURAR = 'RESTAURAR';
         </p>
 
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="btn" [disabled]="descargando()" (click)="descargar()">
+          <button
+            type="button"
+            class="btn"
+            [disabled]="descargando()"
+            appRequiereConexion
+            (click)="descargar()"
+          >
             @if (descargando()) {
               <span class="loading loading-spinner loading-xs"></span>
             }
             Descargar copia
           </button>
-          <label class="btn" [class.btn-disabled]="leyendo()">
+          <label appRequiereConexion class="btn" [class.btn-disabled]="leyendo()">
             @if (leyendo()) {
               <span class="loading loading-spinner loading-xs"></span>
             }
@@ -89,6 +96,7 @@ export const PALABRA_RESTAURAR = 'RESTAURAR';
                 type="button"
                 class="btn btn-error"
                 [disabled]="!confirmado() || restaurando()"
+                appRequiereConexion
                 (click)="restaurar()"
               >
                 @if (restaurando()) {

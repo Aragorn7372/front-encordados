@@ -1,3 +1,4 @@
+import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -7,7 +8,7 @@ import { StatusBadge } from '../../../shared/ui/status-badge';
 
 @Component({
   selector: 'app-torneo-card',
-  imports: [DatePipe, RouterLink, StatusBadge],
+  imports: [RequiereConexion, DatePipe, RouterLink, StatusBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="card bg-base-200 h-full">
@@ -33,10 +34,17 @@ import { StatusBadge } from '../../../shared/ui/status-badge';
         @if (canEdit() || canDelete()) {
           <div class="card-actions mt-2 justify-end">
             @if (canEdit()) {
-              <button type="button" class="btn btn-sm" (click)="edited.emit()">Editar</button>
+              <button type="button" class="btn btn-sm" appRequiereConexion (click)="edited.emit()">
+                Editar
+              </button>
             }
             @if (canDelete()) {
-              <button type="button" class="btn btn-sm btn-error" (click)="deleted.emit()">
+              <button
+                type="button"
+                class="btn btn-sm btn-error"
+                appRequiereConexion
+                (click)="deleted.emit()"
+              >
                 Borrar
               </button>
             }

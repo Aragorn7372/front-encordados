@@ -9,10 +9,9 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, FormRoot, form, min } from '@angular/forms/signals';
-import { firstValueFrom } from 'rxjs';
 import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
-import { JugadoresApi } from '../data-access/api/jugadores.api';
+import { JugadoresEscrituras } from '../data-access/store/jugadores-escrituras';
 import { Jugador } from '../data-access/model/jugador.model';
 
 /** Añadir bonos: el backend solo suma, así que la cantidad debe ser positiva (ENCUERDATU-64). */
@@ -54,10 +53,11 @@ import { Jugador } from '../data-access/model/jugador.model';
   `,
 })
 export class BonosForm {
-  private readonly api = inject(JugadoresApi);
+  private readonly escrituras = inject(JugadoresEscrituras);
 
   readonly jugador = input.required<Jugador>();
-  readonly saved = output<number>();
+  /** true: llegó al servidor; false: sin conexión, quedó en la cola. */
+  readonly saved = output<boolean>();
   readonly cancelled = output();
 
   protected readonly model = signal({ cantidad: 0 });
@@ -72,8 +72,11 @@ export class BonosForm {
       submission: {
         action: async (field) => {
           try {
-            await firstValueFrom(this.api.addBonos(this.jugador().id, field().value().cantidad));
-            this.saved.emit(this.nuevoTotal());
+            const enviado = await this.escrituras.addBonos(
+              this.jugador(),
+              field().value().cantidad,
+            );
+            this.saved.emit(enviado);
             return undefined;
           } catch (error) {
             return toFormErrors(error, field);

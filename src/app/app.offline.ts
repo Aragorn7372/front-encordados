@@ -1,7 +1,10 @@
 import { FuncionesOffline } from './core/offline/funciones-offline';
+import { cordajesManejadores } from './features/cordajes/cordajes.outbox';
 import { cordajesPrecarga } from './features/cordajes/cordajes.precarga';
 import { informesPrecarga } from './features/informes/informes.precarga';
+import { jugadoresManejadores } from './features/jugadores/jugadores.outbox';
 import { jugadoresPrecarga } from './features/jugadores/jugadores.precarga';
+import { materialesManejadores } from './features/materiales/materiales.outbox';
 import { materialesPrecarga } from './features/materiales/materiales.precarga';
 import { pedidosManejadores } from './features/pedidos/pedidos.outbox';
 import { pedidosPrecarga } from './features/pedidos/pedidos.precarga';
@@ -22,7 +25,12 @@ const funciones: FuncionesOffline = {
     torneosPrecarga,
     usuariosPrecarga,
   ],
-  manejadores: [...pedidosManejadores],
+  manejadores: [
+    ...pedidosManejadores,
+    ...jugadoresManejadores,
+    ...cordajesManejadores,
+    ...materialesManejadores,
+  ],
 };
 
 export default funciones;

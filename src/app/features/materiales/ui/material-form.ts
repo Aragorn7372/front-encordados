@@ -13,6 +13,7 @@ import { toFormErrors } from '../../../core/http/form-errors';
 import { FieldError } from '../../../shared/ui/field-error';
 import { FilePicker } from '../../../shared/ui/file-picker';
 import { MaterialesApi } from '../data-access/api/materiales.api';
+import { MaterialesEscrituras } from '../data-access/store/materiales-escrituras';
 import { TIPOS_MATERIAL } from '../data-access/dto/material.dto';
 import { toMaterialFormValue } from '../data-access/mapper/material.mapper';
 import {
@@ -92,10 +93,12 @@ type Campos = Omit<MaterialFormValue, 'imagen'>;
 })
 export class MaterialForm implements OnInit {
   private readonly api = inject(MaterialesApi);
+  private readonly escrituras = inject(MaterialesEscrituras);
 
   readonly tournamentId = input.required<string>();
   readonly material = input<Material | null>(null);
-  readonly saved = output<Material>();
+  /** true: llegó al servidor; false: sin conexión, la edición quedó en la cola. */
+  readonly saved = output<boolean>();
   readonly cancelled = output();
 
   protected readonly tipos = TIPOS_MATERIAL;
@@ -127,12 +130,13 @@ export class MaterialForm implements OnInit {
           const value: MaterialFormValue = { ...field().value(), imagen: this.imagen() };
           const actual = this.material();
           try {
-            const guardado = await firstValueFrom(
-              actual
-                ? this.api.update(actual.id, value, true)
-                : this.api.create(this.tournamentId(), value),
-            );
-            this.saved.emit(guardado);
+            if (actual) {
+              this.saved.emit((await this.escrituras.editar(actual, value)) !== null);
+            } else {
+              // Crear pide conexión (el botón «Nuevo material» se desactiva sin ella)
+              await firstValueFrom(this.api.create(this.tournamentId(), value));
+              this.saved.emit(true);
+            }
             return undefined;
           } catch (error) {
             return toFormErrors(error, field);
