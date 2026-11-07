@@ -12,7 +12,21 @@ COPY . .
 RUN npm run build
 
 # ============================================
-# 2) Servir: nginx con lo compilado
+# Informe de tests y cobertura (como backend_coverage). Solo se construye si se pide:
+#   docker build --target coverageweb -t encordados-front-coverage .
+# Si algún test falla, la imagen no se construye: mejor eso que un informe engañoso.
+# ============================================
+FROM build AS coverage
+RUN npm run test:coverage
+
+FROM nginx:1.28-alpine AS coverageweb
+RUN rm -rf /usr/share/nginx/html/*
+# .vitest: la lista de tests (con su pestaña de cobertura) que genera el reporter html
+COPY --from=coverage /app/.vitest/ /usr/share/nginx/html/
+EXPOSE 80
+
+# ============================================
+# 2) Servir: nginx con lo compilado (la etapa por defecto: va la última)
 # ============================================
 # Sin build args: todo se configura con variables de entorno al arrancar, así la misma imagen
 # vale en docker-compose, en un `docker run` y en cualquier plataforma de contenedores

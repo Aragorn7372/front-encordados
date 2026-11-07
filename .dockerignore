@@ -4,6 +4,7 @@ dist
 .angular
 out-tsc
 coverage
+.vitest
 # Ni lo personal o del editor
 .git
 .vscode
