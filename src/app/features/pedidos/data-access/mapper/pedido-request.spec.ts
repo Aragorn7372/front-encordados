@@ -6,7 +6,7 @@ import {
   pedidoVacio,
   precioSugerido,
 } from '../model/pedido-form.model';
-import { toFormValue, toPurchasedRequest } from './pedido-request';
+import { horizontalDistinta, toFormValue, toPurchasedRequest } from './pedido-request';
 import { PurchasedDto } from '../dto/pedido.dto';
 
 const encordado = (overrides: Partial<PedidoFormValue> = {}): PedidoFormValue => ({
@@ -16,7 +16,14 @@ const encordado = (overrides: Partial<PedidoFormValue> = {}): PedidoFormValue =>
   maquina: ' M-1 ',
   fecha: '2026-06-02T10:00',
   lineas: [
-    { ...nuevaLinea(), raqueta: 'Pure Aero', cuerdaV: 'RPM', tensionV: 25, cuerdaH: 'Xcel' },
+    {
+      ...nuevaLinea(),
+      raqueta: 'Pure Aero',
+      cuerdaV: 'RPM',
+      tensionV: 25,
+      hDistinta: true,
+      cuerdaH: 'Xcel',
+    },
   ],
   ...overrides,
 });
@@ -35,6 +42,30 @@ describe('toPurchasedRequest', () => {
     expect(request.lineas[0]).toMatchObject({
       raquetModel: 'Pure Aero',
       stringSetup: { stringV: 'RPM', tensionV: 25, stringH: 'Xcel' },
+    });
+  });
+
+  it('simétrico: la horizontal se envía igual que la vertical, escriba lo que escriba', () => {
+    const request = toPurchasedRequest(
+      encordado({
+        lineas: [
+          {
+            ...nuevaLinea(),
+            raqueta: 'Blade 98',
+            cuerdaV: 'RPM',
+            tensionV: 25,
+            preestiradoV: 10,
+            cuerdaH: 'Xcel',
+            tensionH: 22,
+          },
+        ],
+      }),
+      't1',
+    );
+    expect(request.lineas[0].stringSetup).toMatchObject({
+      stringH: 'RPM',
+      tensionH: 25,
+      preStetchH: 10,
     });
   });
 
@@ -293,5 +324,19 @@ describe('precioSugerido', () => {
 describe('fechaPorDefecto', () => {
   it('es mañana a la hora en punto', () => {
     expect(fechaPorDefecto(new Date(2026, 5, 1, 9, 37))).toBe('2026-06-02T09:00');
+  });
+});
+
+describe('horizontalDistinta (al repetir un pedido)', () => {
+  const v = { cuerda: 'RPM', tension: 25, preestirado: 0 };
+
+  it.each([
+    [{ cuerda: '', tension: 25, preestirado: 0 }, false],
+    [{ cuerda: 'RPM', tension: 25, preestirado: 0 }, false],
+    [{ cuerda: 'Xcel', tension: 25, preestirado: 0 }, true],
+    [{ cuerda: 'RPM', tension: 24, preestirado: 0 }, true],
+    [{ cuerda: 'RPM', tension: 25, preestirado: 5 }, true],
+  ])('%o → %s', (h, esperado) => {
+    expect(horizontalDistinta(v, h)).toBe(esperado);
   });
 });

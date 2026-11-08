@@ -12,6 +12,11 @@ export interface LineaForm {
   cuerdaV: string;
   tensionV: number;
   preestiradoV: number;
+  /**
+   * El encordado suele ser simétrico: sin marcar, la horizontal es igual que la vertical y no se
+   * escribe. Se marca para poner otra cuerda, tensión o preestirado en la horizontal.
+   */
+  hDistinta: boolean;
   cuerdaH: string;
   tensionH: number;
   preestiradoH: number;
@@ -58,6 +63,7 @@ export function nuevaLinea(anterior?: LineaForm): LineaForm {
     cuerdaV: anterior?.cuerdaV ?? '',
     tensionV: anterior?.tensionV ?? 24,
     preestiradoV: anterior?.preestiradoV ?? 0,
+    hDistinta: anterior?.hDistinta ?? false,
     cuerdaH: anterior?.cuerdaH ?? '',
     tensionH: anterior?.tensionH ?? 24,
     preestiradoH: anterior?.preestiradoH ?? 0,

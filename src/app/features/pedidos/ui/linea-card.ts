@@ -3,7 +3,12 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { LINE_STATUS, PAYMENT_STATUS, StatusInfo } from '../../../shared/models/status';
 import { StatusBadge } from '../../../shared/ui/status-badge';
-import { cordajesDe, esUrgente, lineaCancelable } from '../data-access/mapper/pedido.mapper';
+import {
+  cordajesDe,
+  esUrgente,
+  lineaCancelable,
+  notaDePago,
+} from '../data-access/mapper/pedido.mapper';
 import { Columna, Tarjeta } from '../data-access/model/pedido.model';
 import { Avatar } from '../../../shared/ui/avatar';
 
@@ -102,6 +107,15 @@ export function tonoPedido(id: string): number {
           }
         </div>
 
+        <!-- Lo del pago se ve sin abrir el detalle; el resto del comentario sigue allí -->
+        @if (notaPago(); as nota) {
+          <p
+            class="bg-warning/15 rounded-field border-warning border-s-2 px-2 py-0.5 text-xs"
+            data-testid="nota-pago"
+          >
+            {{ nota }}
+          </p>
+        }
         <p class="text-xs opacity-70">
           {{ tarjeta().pedido.encordador.name || tarjeta().pedido.encordador.username }}
           @if (tarjeta().pedido.maquina) {
@@ -202,6 +216,7 @@ export class LineaCard {
     return PAYMENT_STATUS[pago] ?? { label: pago, tone: 'neutral' };
   });
   protected readonly urgente = computed(() => esUrgente(this.linea()));
+  protected readonly notaPago = computed(() => notaDePago(this.tarjeta().pedido.comentarios));
   protected readonly cancelable = computed(() => lineaCancelable(this.linea().estado));
   protected readonly siguiente = computed(() =>
     this.readonly() ? undefined : SIGUIENTE[this.tarjeta().columna],

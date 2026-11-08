@@ -8,6 +8,8 @@ import {
   conLinea,
   lineaCancelable,
   pedidoCancelable,
+  arreglarMoneda,
+  notaDePago,
   toComments,
   esUrgente,
   estadoDestino,
@@ -342,5 +344,33 @@ describe('esUrgente', () => {
 
   it('lo ya terminado nunca es urgente', () => {
     expect(esUrgente(conFecha('2026-06-01T10:00:00Z', 'COMPLETED'), ahora)).toBe(false);
+  });
+});
+
+describe('arreglarMoneda (lo que escribe el backend con la cultura invariante)', () => {
+  it.each([
+    ['Falta por pagar: ¤80.00', 'Falta por pagar: 80,00 €'],
+    ['Tensar suave | Falta por pagar: ¤1,250.50', 'Tensar suave | Falta por pagar: 1250,50 €'],
+    ['Sin dinero', 'Sin dinero'],
+  ])('%s', (entrada, esperado) => {
+    expect(arreglarMoneda(entrada)).toBe(esperado);
+  });
+
+  it('toPedido enseña los comentarios ya arreglados', () => {
+    expect(toPedido(pedido({ comments: 'Falta por pagar: ¤80.00' })).comentarios).toBe(
+      'Falta por pagar: 80,00 €',
+    );
+  });
+});
+
+describe('notaDePago (lo del pago, a la vista en el tablero)', () => {
+  it.each([
+    ['Falta por pagar: 80,00 €', 'Falta por pagar: 80,00 €'],
+    ['Tensar suave | Falta por pagar: 12,00 €', 'Falta por pagar: 12,00 €'],
+    ['Paga mañana en efectivo', 'Paga mañana en efectivo'],
+    ['Tensar suave', null],
+    ['', null],
+  ])('%s → %s', (comentarios, esperado) => {
+    expect(notaDePago(comentarios)).toBe(esperado);
   });
 });

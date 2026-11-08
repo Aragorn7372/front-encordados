@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input, linkedSignal } from '@angular/core';
+import {
+  CUSTOM_ELEMENTS_SCHEMA,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+} from '@angular/core';
+import { AvatarAnimado } from '../../core/theme/avatar-animado';
 
 export type AvatarSize = 'xs' | 'sm' | 'md';
 
@@ -68,16 +78,112 @@ export function iniciales(nombre: string): string {
   return letras.toUpperCase();
 }
 
-/** Foto del usuario; si no hay o no carga, sus iniciales. Siempre hay algo que ver. */
+/**
+ * Las imágenes por defecto que pone el backend llevan «default» en su id de Cloudinary:
+ * `avatar-photo-default-user-icon-…_y1hcma` en desarrollo y `usuarios/default` en producción.
+ */
+export function esFotoPorDefecto(url: string): boolean {
+  const ruta = url.split('?')[0];
+  const publico = ruta.slice(ruta.lastIndexOf('/', ruta.lastIndexOf('/') - 1) + 1);
+  return /default/i.test(publico);
+}
+
+// Formas, caras y colores del blob: solo los amables, y colores que se ven en los dos temas.
+// Son hex fijos porque blob-avatar los pide así: es una ilustración, no parte del tema.
+const FORMAS = [
+  'circle',
+  'pebble',
+  'squircle',
+  'cloud',
+  'ghost',
+  'cat',
+  'bear',
+  'bunny',
+  'heart',
+  'star',
+  'flower',
+  'droplet',
+] as const;
+const CARAS = [
+  'happy',
+  'content',
+  'curious',
+  'wink',
+  'proud',
+  'dreamy',
+  'excited',
+  'attentive',
+] as const;
+const COLORES = [
+  '8b5cf6',
+  '0ea5e9',
+  '10b981',
+  'f59e0b',
+  'ef4444',
+  'ec4899',
+  '14b8a6',
+  '6366f1',
+  '84cc16',
+  'f97316',
+] as const;
+
+export interface Blob {
+  shape: (typeof FORMAS)[number];
+  expression: (typeof CARAS)[number];
+  color: string;
+  seed: string;
+}
+
+/** FNV-1a: el mismo nombre da siempre el mismo número, en cualquier navegador. */
+function hash(texto: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < texto.length; i++) {
+    h ^= texto.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+/** El blob de cada persona sale de su nombre: siempre el mismo, en todas las pantallas. */
+export function blobDe(nombre: string): Blob {
+  const h = hash(nombre.trim().toLowerCase());
+  return {
+    shape: FORMAS[h % FORMAS.length],
+    expression: CARAS[(h >>> 8) % CARAS.length],
+    color: COLORES[(h >>> 16) % COLORES.length],
+    seed: (h % 2176782336).toString(36).slice(0, 6), // de 1 a 6 caracteres 0-9a-z
+  };
+}
+
+/** El elemento <blob-avatar> se descarga la primera vez que hace falta, no con la app. */
+let carga: Promise<unknown> | undefined;
+const cargarBlob = () => (carga ??= import('blob-avatar/element'));
+
+/**
+ * Foto del usuario; si no hay o no carga, sus iniciales. Siempre hay algo que ver.
+ * Con el avatar animado activado, quien no tiene foto propia (no hay, no carga o es la de
+ * por defecto) sale como un blob animado.
+ */
 @Component({
   selector: 'app-avatar',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'inline-flex shrink-0' },
   template: `
     <!-- Círculo explícito: daisyUI recorta solo «.avatar > div», y así no depende de ello -->
-    <div class="avatar" [class.avatar-placeholder]="!src()">
-      <div class="overflow-hidden rounded-full" [class]="clase()">
-        @if (src(); as url) {
+    <div class="avatar" [class.avatar-placeholder]="!src() && !blob()">
+      <div [class]="clase()" [class.overflow-hidden]="!blob()" [class.rounded-full]="!blob()">
+        @if (blob(); as b) {
+          <blob-avatar
+            class="block size-full"
+            aria-hidden="true"
+            animation="idle.2.4,wink.1.6"
+            [attr.shape]="b.shape"
+            [attr.expression]="b.expression"
+            [attr.color]="b.color"
+            [attr.seed]="b.seed"
+          ></blob-avatar>
+        } @else if (src(); as url) {
           <img
             class="size-full rounded-full object-cover"
             [src]="url"
@@ -104,10 +210,26 @@ export class Avatar {
 
   /** Si cambia la URL, se vuelve a intentar. */
   protected readonly fallo = linkedSignal({ source: this.url, computation: () => false });
+  private readonly animado = inject(AvatarAnimado);
+  private readonly porDefecto = computed(() => {
+    const url = this.url();
+    return !!url && esFotoPorDefecto(url);
+  });
+  /** Se ve una foto propia: hay URL, carga y no es la de por defecto. */
+  readonly tieneFoto = computed(() => !!this.url() && !this.fallo() && !this.porDefecto());
+  protected readonly blob = computed(() =>
+    this.animado.activo() && !this.tieneFoto() ? blobDe(this.nombre()) : null,
+  );
   protected readonly src = computed(() => {
     const url = this.url();
     return url && !this.fallo() ? miniatura(url, PX[this.size()]) : null;
   });
   protected readonly clase = computed(() => SIZE[this.size()]);
   protected readonly letras = computed(() => iniciales(this.nombre()));
+
+  constructor() {
+    effect(() => {
+      if (this.blob()) void cargarBlob();
+    });
+  }
 }

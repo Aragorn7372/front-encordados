@@ -89,6 +89,21 @@ describe('LineaCard', () => {
     expect(element.textContent).toContain('V: RPM Blast 25 kg · H: Xcel 24 kg +10 %');
   });
 
+  it('lo del pago en los comentarios se ve en la tarjeta; el resto no', async () => {
+    const element = await render(
+      {},
+      { pedido: { ...pedido, comentarios: 'Tensar suave | Falta por pagar: 80,00 €' } },
+    );
+    const nota = element.querySelector('[data-testid="nota-pago"]');
+    expect(nota?.textContent?.trim()).toBe('Falta por pagar: 80,00 €');
+    expect(element.textContent).not.toContain('Tensar suave');
+  });
+
+  it('sin nada del pago en los comentarios, no hay nota', async () => {
+    const element = await render({}, { pedido: { ...pedido, comentarios: 'Tensar suave' } });
+    expect(element.querySelector('[data-testid="nota-pago"]')).toBeNull();
+  });
+
   it('distingue raquetas del mismo pedido', async () => {
     const element = await render({}, { numero: 2, total: 5 });
     expect(element.textContent).toContain('2/5');

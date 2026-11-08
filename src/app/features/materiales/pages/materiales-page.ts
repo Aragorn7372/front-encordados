@@ -17,6 +17,7 @@ import { MaterialesStore } from '../data-access/store/materiales.store';
 import { MaterialesEscrituras } from '../data-access/store/materiales-escrituras';
 import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { MaterialForm } from '../ui/material-form';
+import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
 
 /** `undefined`: formulario cerrado. `null`: creando. Con valor: editando ese material. */
 type Editing = Material | null | undefined;
@@ -25,6 +26,8 @@ type Editing = Material | null | undefined;
 @Component({
   selector: 'app-materiales-page',
   imports: [
+    Esqueleto,
+    FilasEsqueleto,
     SinDatos,
     MaterialForm,
     CurrencyPipe,
@@ -111,82 +114,88 @@ type Editing = Material | null | undefined;
           message="Añádelos con «Nuevo material» o importando un Excel."
         />
       } @else {
-        <div class="overflow-x-auto" [attr.aria-busy]="store.loading()">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Material</th>
-                <th>Tipo</th>
-                <th class="text-right">Precio</th>
-                <th class="text-right">Stock</th>
-                <th><span class="sr-only">Acciones</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (material of store.materiales(); track material.id) {
+        <app-esqueleto [cargando]="store.loading()" [hayDatos]="store.materiales().length > 0">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <!-- data-shimmer-ignore: las cabeceras se ven mientras carga -->
+              <thead data-shimmer-ignore>
                 <tr>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <img
-                        class="rounded-box size-10 object-cover"
-                        alt=""
-                        loading="lazy"
-                        [src]="material.imagen"
-                      />
-                      <div>
-                        <div class="font-medium">
-                          {{ material.modelo }}
-                          @if (store.sinEnviar().has(material.id)) {
-                            <span
-                              class="badge badge-warning badge-soft badge-sm ml-1"
-                              title="Hecho sin conexión: se enviará al recuperarla"
-                            >
-                              Sin enviar
-                            </span>
-                          }
+                  <th>Material</th>
+                  <th>Tipo</th>
+                  <th class="text-right">Precio</th>
+                  <th class="text-right">Stock</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (material of store.materiales(); track material.id) {
+                  <tr>
+                    <td>
+                      <div class="flex items-center gap-3">
+                        <img
+                          class="rounded-box size-10 object-cover"
+                          alt=""
+                          loading="lazy"
+                          [src]="material.imagen"
+                        />
+                        <div>
+                          <div class="font-medium">
+                            {{ material.modelo }}
+                            @if (store.sinEnviar().has(material.id)) {
+                              <span
+                                class="badge badge-warning badge-soft badge-sm ml-1"
+                                title="Hecho sin conexión: se enviará al recuperarla"
+                              >
+                                Sin enviar
+                              </span>
+                            }
+                          </div>
+                          <div class="text-xs opacity-60">{{ material.marca }}</div>
                         </div>
-                        <div class="text-xs opacity-60">{{ material.marca }}</div>
                       </div>
-                    </div>
-                  </td>
-                  <td>{{ tipoLabel[material.tipo] }}</td>
-                  <td class="text-right tabular-nums">{{ material.precio | currency: 'EUR' }}</td>
-                  <td>
-                    <app-stock-control
-                      [stock]="material.stock"
-                      [nombre]="material.modelo"
-                      (cambio)="store.ajustarStock(material, $event)"
-                    />
-                  </td>
-                  <td class="text-right whitespace-nowrap">
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-xs"
-                      [attr.aria-label]="'Editar ' + material.modelo"
-                      (click)="editing.set(material)"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-xs text-error"
-                      [attr.aria-label]="'Borrar ' + material.modelo"
-                      (click)="borrar(material)"
-                    >
-                      Borrar
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="5" class="py-6 text-center opacity-60">
-                    Ningún material coincide con los filtros.
-                  </td>
-                </tr>
+                    </td>
+                    <td>{{ tipoLabel[material.tipo] }}</td>
+                    <td class="text-right tabular-nums">{{ material.precio | currency: 'EUR' }}</td>
+                    <td>
+                      <app-stock-control
+                        [stock]="material.stock"
+                        [nombre]="material.modelo"
+                        (cambio)="store.ajustarStock(material, $event)"
+                      />
+                    </td>
+                    <td class="text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs"
+                        [attr.aria-label]="'Editar ' + material.modelo"
+                        (click)="editing.set(material)"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs text-error"
+                        [attr.aria-label]="'Borrar ' + material.modelo"
+                        (click)="borrar(material)"
+                      >
+                        Borrar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="py-6 text-center opacity-60">
+                      Ningún material coincide con los filtros.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (store.loading() && store.materiales().length === 0) {
+                <tbody app-filas-esqueleto [columnas]="5"></tbody>
               }
-            </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </app-esqueleto>
       }
     }
 

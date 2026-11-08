@@ -16,6 +16,7 @@ import { Pedido } from '../data-access/model/pedido.model';
 import { PedidosStore } from '../data-access/store/pedidos.store';
 import { LineaActualizada, PedidoDetalle } from '../ui/pedido-detalle';
 import { Avatar } from '../../../shared/ui/avatar';
+import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
 
 type Resultado = 'listo' | 'entregado' | 'cancelado';
 
@@ -37,6 +38,8 @@ function resultado(pedido: Pedido): Resultado | null {
 @Component({
   selector: 'app-terminados',
   imports: [
+    Esqueleto,
+    FilasEsqueleto,
     SinDatos,
     Avatar,
     CurrencyPipe,
@@ -129,59 +132,65 @@ function resultado(pedido: Pedido): Resultado | null {
           message="Ajusta los filtros o el torneo."
         />
       } @else {
-        <div class="bg-base-200 rounded-box overflow-x-auto" [attr.aria-busy]="store.loading()">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Jugador</th>
-                <th>Encordador</th>
-                <th>Estado</th>
-                <th>Pago</th>
-                <th class="text-right">Importe</th>
-                <th>Actualizado</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (pedido of filas(); track pedido.id) {
+        <app-esqueleto [cargando]="store.loading()" [hayDatos]="filas().length > 0">
+          <div class="bg-base-200 rounded-box overflow-x-auto">
+            <table class="table">
+              <!-- data-shimmer-ignore: las cabeceras se ven mientras carga -->
+              <thead data-shimmer-ignore>
                 <tr>
-                  <td>
-                    <span class="inline-flex items-center gap-2">
-                      <app-avatar
-                        size="xs"
-                        [url]="pedido.jugador.imageUrl"
-                        [nombre]="pedido.jugador.name || pedido.jugador.username"
-                      />
-                      <button
-                        type="button"
-                        class="link link-hover text-left"
-                        (click)="abiertoId.set(pedido.id)"
-                      >
-                        {{ pedido.jugador.name || pedido.jugador.username }}
-                      </button>
-                    </span>
-                    @if (pedido.tipo === 'taller') {
-                      <span class="badge badge-outline badge-sm ml-1">Taller</span>
-                    }
-                  </td>
-                  <td>
-                    <span class="inline-flex items-center gap-2">
-                      <app-avatar
-                        size="xs"
-                        [url]="pedido.encordador.imageUrl"
-                        [nombre]="pedido.encordador.name || pedido.encordador.username"
-                      />
-                      {{ pedido.encordador.name || pedido.encordador.username }}
-                    </span>
-                  </td>
-                  <td><app-status-badge [status]="estadoInfo[pedido.estado]" /></td>
-                  <td><app-status-badge [status]="pagoInfo(pedido)" /></td>
-                  <td class="text-right">{{ pedido.precio | currency: 'EUR' }}</td>
-                  <td class="whitespace-nowrap">{{ pedido.actualizadoEn | date: 'short' }}</td>
+                  <th>Jugador</th>
+                  <th>Encordador</th>
+                  <th>Estado</th>
+                  <th>Pago</th>
+                  <th class="text-right">Importe</th>
+                  <th>Actualizado</th>
                 </tr>
+              </thead>
+              <tbody>
+                @for (pedido of filas(); track pedido.id) {
+                  <tr>
+                    <td>
+                      <span class="inline-flex items-center gap-2">
+                        <app-avatar
+                          size="xs"
+                          [url]="pedido.jugador.imageUrl"
+                          [nombre]="pedido.jugador.name || pedido.jugador.username"
+                        />
+                        <button
+                          type="button"
+                          class="link link-hover text-left"
+                          (click)="abiertoId.set(pedido.id)"
+                        >
+                          {{ pedido.jugador.name || pedido.jugador.username }}
+                        </button>
+                      </span>
+                      @if (pedido.tipo === 'taller') {
+                        <span class="badge badge-outline badge-sm ml-1">Taller</span>
+                      }
+                    </td>
+                    <td>
+                      <span class="inline-flex items-center gap-2">
+                        <app-avatar
+                          size="xs"
+                          [url]="pedido.encordador.imageUrl"
+                          [nombre]="pedido.encordador.name || pedido.encordador.username"
+                        />
+                        {{ pedido.encordador.name || pedido.encordador.username }}
+                      </span>
+                    </td>
+                    <td><app-status-badge [status]="estadoInfo[pedido.estado]" /></td>
+                    <td><app-status-badge [status]="pagoInfo(pedido)" /></td>
+                    <td class="text-right">{{ pedido.precio | currency: 'EUR' }}</td>
+                    <td class="whitespace-nowrap">{{ pedido.actualizadoEn | date: 'short' }}</td>
+                  </tr>
+                }
+              </tbody>
+              @if (store.loading() && filas().length === 0) {
+                <tbody app-filas-esqueleto [columnas]="6"></tbody>
               }
-            </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </app-esqueleto>
       }
     }
 

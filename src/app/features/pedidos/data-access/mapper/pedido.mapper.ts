@@ -12,6 +12,34 @@ import { Columna, Cordaje, LineaPedido, Pedido, Tarjeta } from '../model/pedido.
 const TALLER_MARK = 'ORDEN_DE_TALLER';
 const MATERIAL_TAG = '[MATERIAL PROPIO]';
 const CANTIDAD = /^Cant:\s*(\d+)(?:\s*\|\s*(.*))?$/s;
+/**
+ * El backend añade «Falta por pagar: {falta:C2}» a los comentarios con la cultura invariante del
+ * contenedor: sale «¤80.00» (ENCUERDATU-81). Aquí se escribe como dinero en español: «80,00 €».
+ */
+const MONEDA_INVARIANTE = /¤\s?(-?[\d,]*\d(?:\.\d+)?)/g;
+const EUROS = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
+/** Lo que se dice del pago en los comentarios («Falta por pagar: 80,00 €», «paga mañana»…). */
+const SOBRE_PAGO = /\bpag|€/i;
+
+/**
+ * La parte de los comentarios que habla del pago, para verla en la tarjeta del tablero sin abrir
+ * el detalle. Los comentarios se separan por « | » (así los junta el backend); el resto se queda
+ * en el detalle.
+ */
+export function notaDePago(comentarios: string | undefined): string | null {
+  const partes = (comentarios ?? '')
+    .split('|')
+    .map((parte) => parte.trim())
+    .filter((parte) => parte && SOBRE_PAGO.test(parte));
+  return partes.length ? partes.join(' · ') : null;
+}
+
+export function arreglarMoneda(texto: string): string {
+  return texto.replace(MONEDA_INVARIANTE, (_, numero: string) =>
+    EUROS.format(Number(numero.replace(/,/g, ''))),
+  );
+}
 
 const DESTINO: Record<Columna, LineStatus> = {
   pendiente: 'PENDING',
@@ -88,7 +116,7 @@ export function toPedido(dto: PurchasedDto): Pedido {
     jugador: dto.player,
     encordador: dto.encorder,
     maquina: dto.machine ?? '',
-    comentarios: comments.replace(MATERIAL_TAG, '').trim(),
+    comentarios: arreglarMoneda(comments.replace(MATERIAL_TAG, '').trim()),
     materialPropio: comments.includes(MATERIAL_TAG),
     pago: dto.payStatus as PaymentStatus,
     precio: dto.price,

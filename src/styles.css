@@ -1,4 +1,12 @@
 @import 'tailwindcss';
+/* Inter (variable: todos los grosores en un fichero). Se sirve desde la propia app, no desde
+   Google Fonts: así funciona sin conexión (la guarda el service worker) y no avisa a terceros.
+   Por unicode-range el navegador solo descarga los alfabetos que se usan (latín, ~50 kB). */
+@import '@fontsource-variable/inter';
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+}
 @plugin "daisyui" {
   themes: false;
 }
@@ -87,4 +95,33 @@
     width: 100%;
     max-width: 100mm;
   }
+}
+
+/* Cambio de página: la página nueva entra con un fundido corto. Sin View Transitions: hacían una
+   "foto" de la página vieja y otra de la nueva, y entre páginas de distinta altura (Perfil) el
+   navegador estiraba el bloque de una a otra y quedaba raro. El componente de la ruta se inserta
+   justo después de <router-outlet>, así que la animación corre una vez, al llegar. */
+.contenido router-outlet + * {
+  animation: entrada-pagina 180ms ease-out;
+}
+@keyframes entrada-pagina {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contenido router-outlet + * {
+    animation: none;
+  }
+}
+
+/* Campo numérico sin las flechas del navegador (cuando hay botones − y + propios) */
+.sin-flechas {
+  appearance: textfield;
+}
+.sin-flechas::-webkit-inner-spin-button,
+.sin-flechas::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
 }

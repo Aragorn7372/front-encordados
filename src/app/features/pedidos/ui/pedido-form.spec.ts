@@ -123,6 +123,51 @@ describe('PedidoForm', () => {
     expect(element().querySelector('#linea-color-0')).not.toBeNull();
   });
 
+  it('la horizontal es la vertical y no se escribe hasta marcar «Horizontal distinta»', async () => {
+    const campo = (id: string) => element().querySelector<HTMLInputElement>(id)!;
+    const escribir = async (id: string, valor: string) => {
+      campo(id).value = valor;
+      campo(id).dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+    };
+    await escribir('#linea-cuerdav-0', 'RPM Blast');
+    await escribir('#linea-tensionv-0', '23');
+
+    expect(campo('#linea-cuerdah-0').disabled).toBe(true);
+    expect(campo('#linea-cuerdah-0').value).toBe('RPM Blast');
+    expect(campo('#linea-tensionh-0').value).toBe('23');
+
+    const distinta = [...element().querySelectorAll('label')]
+      .find((l) => l.textContent?.includes('Horizontal distinta'))!
+      .querySelector('input')!;
+    distinta.click();
+    await fixture.whenStable();
+
+    // Se empieza desde la vertical, ya editable
+    expect(campo('#linea-cuerdah-0').disabled).toBe(false);
+    expect(campo('#linea-cuerdah-0').value).toBe('RPM Blast');
+    expect(campo('#linea-tensionh-0').value).toBe('23');
+  });
+
+  it('las unidades se cambian con − y +, entre 1 y el máximo', async () => {
+    const cantidad = () => element().querySelector<HTMLInputElement>('#linea-cantidad-0')!;
+    const menos = element().querySelector<HTMLButtonElement>('[aria-label^="Una raqueta menos"]')!;
+    const mas = element().querySelector<HTMLButtonElement>('[aria-label^="Una raqueta más"]')!;
+
+    expect(cantidad().value).toBe('1');
+    expect(menos.disabled).toBe(true);
+
+    mas.click();
+    mas.click();
+    await fixture.whenStable();
+    expect(cantidad().value).toBe('3');
+    expect(menos.disabled).toBe(false);
+
+    menos.click();
+    await fixture.whenStable();
+    expect(cantidad().value).toBe('2');
+  });
+
   it('desde la segunda raqueta se puede poner otra fecha', async () => {
     expect(boton('Otra fecha')).toHaveLength(0);
 

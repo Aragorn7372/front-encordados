@@ -113,10 +113,37 @@
       <fieldset class="fieldset bg-base-200 rounded-box mt-3 p-3">
         <div class="flex flex-wrap items-center gap-2">
           <span class="font-medium">Raqueta {{ i + 1 }}</span>
-          <label class="input input-sm w-32">
-            <span class="label">Unidades</span>
-            <input [id]="'linea-cantidad-' + i" type="number" [formField]="linea.cantidad" />
-          </label>
+          <!-- − número +: las flechas del navegador tapaban el número en un campo tan estrecho -->
+          <div class="flex items-center gap-2">
+            <label class="text-sm opacity-70" [for]="'linea-cantidad-' + i">Unidades</label>
+            <div class="join">
+              <button
+                type="button"
+                class="btn btn-sm btn-square join-item"
+                [attr.aria-label]="'Una raqueta menos en la raqueta ' + (i + 1)"
+                [disabled]="linea.cantidad().value() <= 1"
+                (click)="cambiarCantidad(i, -1)"
+              >
+                <app-icon name="menos" />
+              </button>
+              <input
+                [id]="'linea-cantidad-' + i"
+                class="input input-sm join-item sin-flechas w-12 text-center tabular-nums"
+                type="number"
+                inputmode="numeric"
+                [formField]="linea.cantidad"
+              />
+              <button
+                type="button"
+                class="btn btn-sm btn-square join-item"
+                [attr.aria-label]="'Una raqueta más en la raqueta ' + (i + 1)"
+                [disabled]="linea.cantidad().value() >= maxUnidades"
+                (click)="cambiarCantidad(i, 1)"
+              >
+                <app-icon name="mas" />
+              </button>
+            </div>
+          </div>
           @if (i > 0) {
             @if (linea.fecha().value()) {
               <input
@@ -193,35 +220,76 @@
               <app-field-error [field]="linea.preestiradoV" />
             </div>
           </div>
-          <div class="sm:col-span-2">
-            <label class="fieldset-legend" [for]="'linea-cuerdah-' + i">
-              Cuerda horizontal (vacío = igual)
-            </label>
-            <input [id]="'linea-cuerdah-' + i" class="input w-full" [formField]="linea.cuerdaH" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="fieldset-legend" [for]="'linea-tensionh-' + i">kg</label>
-              <input
-                [id]="'linea-tensionh-' + i"
-                class="input w-full"
-                type="number"
-                step="0.5"
-                [formField]="linea.tensionH"
-              />
-              <app-field-error [field]="linea.tensionH" />
+          <!-- Como el color con el logo: la horizontal se escribe solo si es distinta -->
+          <label class="label cursor-pointer gap-2 sm:col-span-3">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-sm"
+              [checked]="linea.hDistinta().value()"
+              (change)="setHDistinta(i, $any($event.target).checked)"
+            />
+            Horizontal distinta
+          </label>
+          @if (linea.hDistinta().value()) {
+            <div class="sm:col-span-2">
+              <label class="fieldset-legend" [for]="'linea-cuerdah-' + i">Cuerda horizontal</label>
+              <input [id]="'linea-cuerdah-' + i" class="input w-full" [formField]="linea.cuerdaH" />
             </div>
-            <div>
-              <label class="fieldset-legend" [for]="'linea-preh-' + i">% pre.</label>
-              <input
-                [id]="'linea-preh-' + i"
-                class="input w-full"
-                type="number"
-                [formField]="linea.preestiradoH"
-              />
-              <app-field-error [field]="linea.preestiradoH" />
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="fieldset-legend" [for]="'linea-tensionh-' + i">kg</label>
+                <input
+                  [id]="'linea-tensionh-' + i"
+                  class="input w-full"
+                  type="number"
+                  step="0.5"
+                  [formField]="linea.tensionH"
+                />
+                <app-field-error [field]="linea.tensionH" />
+              </div>
+              <div>
+                <label class="fieldset-legend" [for]="'linea-preh-' + i">% pre.</label>
+                <input
+                  [id]="'linea-preh-' + i"
+                  class="input w-full"
+                  type="number"
+                  [formField]="linea.preestiradoH"
+                />
+                <app-field-error [field]="linea.preestiradoH" />
+              </div>
             </div>
-          </div>
+          } @else {
+            <!-- Igual que la vertical: se ve lo que se va a guardar, sin poder escribirlo -->
+            <div class="sm:col-span-2">
+              <label class="fieldset-legend" [for]="'linea-cuerdah-' + i">Cuerda horizontal</label>
+              <input
+                [id]="'linea-cuerdah-' + i"
+                class="input w-full"
+                disabled
+                [value]="linea.cuerdaV().value()"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="fieldset-legend" [for]="'linea-tensionh-' + i">kg</label>
+                <input
+                  [id]="'linea-tensionh-' + i"
+                  class="input w-full"
+                  disabled
+                  [value]="linea.tensionV().value()"
+                />
+              </div>
+              <div>
+                <label class="fieldset-legend" [for]="'linea-preh-' + i">% pre.</label>
+                <input
+                  [id]="'linea-preh-' + i"
+                  class="input w-full"
+                  disabled
+                  [value]="linea.preestiradoV().value()"
+                />
+              </div>
+            </div>
+          }
           <label class="label cursor-pointer gap-2 self-end sm:mb-3">
             <input type="checkbox" class="checkbox checkbox-sm" [formField]="linea.logo" />
             Con logo

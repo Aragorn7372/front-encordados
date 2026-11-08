@@ -19,6 +19,7 @@ import { BonosForm } from '../ui/bonos-form';
 import { ContactoForm } from '../ui/contacto-form';
 import { JugadorEdicion } from '../ui/jugador-edicion';
 import { Avatar } from '../../../shared/ui/avatar';
+import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
 
 /** Lo que hay abierto en el modal. Uno solo para las tres acciones. */
 type Accion =
@@ -38,6 +39,8 @@ const TITULOS: Record<Accion['tipo'], string> = {
 @Component({
   selector: 'app-jugadores-page',
   imports: [
+    Esqueleto,
+    FilasEsqueleto,
     SinDatos,
     Avatar,
     BonosForm,
@@ -112,94 +115,100 @@ const TITULOS: Record<Accion['tipo'], string> = {
           message="Créalos con «Nuevo jugador» o desde el formulario de un pedido."
         />
       } @else {
-        <div class="overflow-x-auto" [attr.aria-busy]="store.loading()">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Jugador</th>
-                <th>Email</th>
-                <th class="text-right">Bonos</th>
-                <th><span class="sr-only">Acciones</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (jugador of store.jugadores(); track jugador.id) {
+        <app-esqueleto [cargando]="store.loading()" [hayDatos]="store.jugadores().length > 0">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <!-- data-shimmer-ignore: las cabeceras se ven mientras carga -->
+              <thead data-shimmer-ignore>
                 <tr>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <app-avatar [url]="jugador.imagen" [nombre]="jugador.nombre" />
-                      <div>
-                        <div class="font-medium">
-                          {{ jugador.nombre }}
-                          @if (store.sinEnviar().has(jugador.id)) {
-                            <span
-                              class="badge badge-warning badge-soft badge-sm ml-1"
-                              title="Hecho sin conexión: se enviará al recuperarla"
-                            >
-                              Sin enviar
-                            </span>
+                  <th>Jugador</th>
+                  <th>Email</th>
+                  <th class="text-right">Bonos</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (jugador of store.jugadores(); track jugador.id) {
+                  <tr>
+                    <td>
+                      <div class="flex items-center gap-3">
+                        <app-avatar [url]="jugador.imagen" [nombre]="jugador.nombre" />
+                        <div>
+                          <div class="font-medium">
+                            {{ jugador.nombre }}
+                            @if (store.sinEnviar().has(jugador.id)) {
+                              <span
+                                class="badge badge-warning badge-soft badge-sm ml-1"
+                                title="Hecho sin conexión: se enviará al recuperarla"
+                              >
+                                Sin enviar
+                              </span>
+                            }
+                          </div>
+                          @if (jugador.username) {
+                            <div class="text-xs opacity-60">{{ jugador.username }}</div>
                           }
                         </div>
-                        @if (jugador.username) {
-                          <div class="text-xs opacity-60">{{ jugador.username }}</div>
-                        }
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    @if (jugador.email) {
-                      {{ jugador.email }}
-                    } @else {
-                      <span class="opacity-50">Sin email</span>
-                    }
-                  </td>
-                  <td class="text-right tabular-nums">{{ jugador.bonos | currency: 'EUR' }}</td>
-                  <td class="text-right whitespace-nowrap">
-                    @if (esTemporal(jugador.id)) {
-                      <!-- Aún no existe en el servidor: no tiene id con el que editarlo -->
-                      <span class="text-xs opacity-60">Al enviarse podrás editarlo</span>
-                    } @else {
-                      @if (puedeBonos()) {
-                        <button
-                          type="button"
-                          class="btn btn-ghost btn-xs"
-                          [attr.aria-label]="'Añadir bonos a ' + jugador.nombre"
-                          (click)="accion.set({ tipo: 'bonos', jugador })"
-                        >
-                          + Bonos
-                        </button>
+                    </td>
+                    <td>
+                      @if (jugador.email) {
+                        {{ jugador.email }}
+                      } @else {
+                        <span class="opacity-50">Sin email</span>
                       }
-                      @if (esAdmin()) {
-                        <button
-                          type="button"
-                          class="btn btn-ghost btn-xs"
-                          [attr.aria-label]="'Editar a ' + jugador.nombre"
-                          (click)="accion.set({ tipo: 'editar', jugador })"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-ghost btn-xs text-error"
-                          [attr.aria-label]="'Borrar a ' + jugador.nombre"
-                          (click)="borrar(jugador)"
-                        >
-                          Borrar
-                        </button>
+                    </td>
+                    <td class="text-right tabular-nums">{{ jugador.bonos | currency: 'EUR' }}</td>
+                    <td class="text-right whitespace-nowrap">
+                      @if (esTemporal(jugador.id)) {
+                        <!-- Aún no existe en el servidor: no tiene id con el que editarlo -->
+                        <span class="text-xs opacity-60">Al enviarse podrás editarlo</span>
+                      } @else {
+                        @if (puedeBonos()) {
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-xs"
+                            [attr.aria-label]="'Añadir bonos a ' + jugador.nombre"
+                            (click)="accion.set({ tipo: 'bonos', jugador })"
+                          >
+                            + Bonos
+                          </button>
+                        }
+                        @if (esAdmin()) {
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-xs"
+                            [attr.aria-label]="'Editar a ' + jugador.nombre"
+                            (click)="accion.set({ tipo: 'editar', jugador })"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-xs text-error"
+                            [attr.aria-label]="'Borrar a ' + jugador.nombre"
+                            (click)="borrar(jugador)"
+                          >
+                            Borrar
+                          </button>
+                        }
                       }
-                    }
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="4" class="py-6 text-center opacity-60">
-                    Ningún jugador coincide con la búsqueda.
-                  </td>
-                </tr>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="py-6 text-center opacity-60">
+                      Ningún jugador coincide con la búsqueda.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (store.loading() && store.jugadores().length === 0) {
+                <tbody app-filas-esqueleto [columnas]="4"></tbody>
               }
-            </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </app-esqueleto>
       }
     }
 

@@ -6,7 +6,7 @@ import {
   nuevoArticulo,
   pedidoVacio,
 } from '../model/pedido-form.model';
-import { CambiosPedido, Pedido } from '../model/pedido.model';
+import { CambiosPedido, Cordaje, Pedido } from '../model/pedido.model';
 
 /** PurchasedRequestDto. */
 export interface PurchasedRequest {
@@ -90,14 +90,24 @@ export function toPurchasedRequest(value: PedidoFormValue, tournamentId: string)
           stringV: linea.cuerdaV.trim(),
           tensionV: linea.tensionV,
           preStetchV: linea.preestiradoV,
-          stringH: linea.cuerdaH.trim(),
-          tensionH: linea.tensionH,
-          preStetchH: linea.preestiradoH,
+          // Simétrico: la horizontal es la vertical (lo que se ve en el formulario)
+          stringH: (linea.hDistinta ? linea.cuerdaH : linea.cuerdaV).trim(),
+          tensionH: linea.hDistinta ? linea.tensionH : linea.tensionV,
+          preStetchH: linea.hDistinta ? linea.preestiradoH : linea.preestiradoV,
         },
       };
       return Array.from({ length: linea.cantidad }, () => ({ ...dto }));
     }),
   };
+}
+
+/** Una cuerda H vacía es la de siempre: «igual que la vertical». */
+export function horizontalDistinta(vertical: Cordaje, horizontal: Cordaje): boolean {
+  return (
+    (horizontal.cuerda.trim() !== '' && horizontal.cuerda.trim() !== vertical.cuerda.trim()) ||
+    horizontal.tension !== vertical.tension ||
+    horizontal.preestirado !== vertical.preestirado
+  );
 }
 
 /** Clave de lo que hace iguales a dos raquetas al repetir: todo menos cantidad y fecha. */
@@ -130,6 +140,7 @@ export function toFormValue(pedido: Pedido): PedidoFormValue {
             cuerdaV: linea.vertical.cuerda,
             tensionV: linea.vertical.tension,
             preestiradoV: linea.vertical.preestirado,
+            hDistinta: horizontalDistinta(linea.vertical, linea.horizontal),
             cuerdaH: linea.horizontal.cuerda,
             tensionH: linea.horizontal.tension,
             preestiradoH: linea.horizontal.preestirado,

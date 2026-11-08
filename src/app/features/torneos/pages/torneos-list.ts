@@ -13,6 +13,7 @@ import { SearchInput } from '../../../shared/ui/search-input';
 import { TorneosStore } from '../data-access/store/torneos.store';
 import { TorneoCard } from '../ui/torneo-card';
 import { TorneoForm } from '../ui/torneo-form';
+import { Esqueleto } from '../../../shared/ui/esqueleto';
 
 /** `undefined`: formulario cerrado. `null`: creando. Con valor: editando ese torneo. */
 type Editing = TournamentSummary | null | undefined;
@@ -20,6 +21,7 @@ type Editing = TournamentSummary | null | undefined;
 @Component({
   selector: 'app-torneos-list',
   imports: [
+    Esqueleto,
     RequiereConexion,
     SinDatos,
     EmptyState,
@@ -55,17 +57,23 @@ type Editing = TournamentSummary | null | undefined;
     } @else if (store.tournaments().length === 0 && !store.loading()) {
       <app-empty-state heading="No hay torneos" message="Cuando haya alguno, aparecerá aquí." />
     } @else {
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" [attr.aria-busy]="store.loading()">
-        @for (tournament of store.tournaments(); track tournament.id) {
-          <app-torneo-card
-            [tournament]="tournament"
-            [canEdit]="canManage()"
-            [canDelete]="canDelete()"
-            (edited)="editing.set(tournament)"
-            (deleted)="remove(tournament)"
-          />
-        }
-      </div>
+      <app-esqueleto [cargando]="store.loading()" [hayDatos]="store.tournaments().length > 0">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          @if (store.loading() && store.tournaments().length === 0) {
+            <!-- Un solo bloque: varias tarjetas de ejemplo parecían torneos de verdad -->
+            <div class="rounded-box h-40 w-full"></div>
+          }
+          @for (tournament of store.tournaments(); track tournament.id) {
+            <app-torneo-card
+              [tournament]="tournament"
+              [canEdit]="canManage()"
+              [canDelete]="canDelete()"
+              (edited)="editing.set(tournament)"
+              (deleted)="remove(tournament)"
+            />
+          }
+        </div>
+      </app-esqueleto>
     }
 
     <app-paginator

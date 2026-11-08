@@ -17,6 +17,7 @@ import { CordajesStore } from '../data-access/store/cordajes.store';
 import { CordajesEscrituras } from '../data-access/store/cordajes-escrituras';
 import { RequiereConexion } from '../../../shared/ui/requiere-conexion';
 import { CordajeForm } from '../ui/cordaje-form';
+import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
 
 /** `undefined`: formulario cerrado. `null`: creando. Con valor: editando ese cordaje. */
 type Editing = Cordaje | null | undefined;
@@ -25,6 +26,8 @@ type Editing = Cordaje | null | undefined;
 @Component({
   selector: 'app-cordajes-page',
   imports: [
+    Esqueleto,
+    FilasEsqueleto,
     SinDatos,
     CordajeForm,
     CurrencyPipe,
@@ -112,87 +115,93 @@ type Editing = Cordaje | null | undefined;
           message="Añádelos con «Nuevo cordaje» o importando un Excel."
         />
       } @else {
-        <div class="overflow-x-auto" [attr.aria-busy]="store.loading()">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Cordaje</th>
-                <th>Tipo</th>
-                <th class="text-right">Calibre</th>
-                <th class="text-right">Precio</th>
-                <th class="text-right">Stock</th>
-                <th><span class="sr-only">Acciones</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (cordaje of store.cordajes(); track cordaje.id) {
+        <app-esqueleto [cargando]="store.loading()" [hayDatos]="store.cordajes().length > 0">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <!-- data-shimmer-ignore: las cabeceras se ven mientras carga -->
+              <thead data-shimmer-ignore>
                 <tr>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <img
-                        class="rounded-box size-10 object-cover"
-                        alt=""
-                        loading="lazy"
-                        [src]="cordaje.imagen"
-                      />
-                      <div>
-                        <div class="font-medium">
-                          {{ cordaje.modelo }}
-                          @if (store.sinEnviar().has(cordaje.id)) {
-                            <span
-                              class="badge badge-warning badge-soft badge-sm ml-1"
-                              title="Hecho sin conexión: se enviará al recuperarla"
-                            >
-                              Sin enviar
-                            </span>
-                          }
+                  <th>Cordaje</th>
+                  <th>Tipo</th>
+                  <th class="text-right">Calibre</th>
+                  <th class="text-right">Precio</th>
+                  <th class="text-right">Stock</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cordaje of store.cordajes(); track cordaje.id) {
+                  <tr>
+                    <td>
+                      <div class="flex items-center gap-3">
+                        <img
+                          class="rounded-box size-10 object-cover"
+                          alt=""
+                          loading="lazy"
+                          [src]="cordaje.imagen"
+                        />
+                        <div>
+                          <div class="font-medium">
+                            {{ cordaje.modelo }}
+                            @if (store.sinEnviar().has(cordaje.id)) {
+                              <span
+                                class="badge badge-warning badge-soft badge-sm ml-1"
+                                title="Hecho sin conexión: se enviará al recuperarla"
+                              >
+                                Sin enviar
+                              </span>
+                            }
+                          </div>
+                          <div class="text-xs opacity-60">{{ cordaje.marca }}</div>
                         </div>
-                        <div class="text-xs opacity-60">{{ cordaje.marca }}</div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    {{ tipoLabel[cordaje.tipo] }}
-                    <div class="text-xs opacity-60">{{ formatoLabel[cordaje.formato] }}</div>
-                  </td>
-                  <td class="text-right tabular-nums">{{ cordaje.calibre | number: '1.2-2' }}</td>
-                  <td class="text-right tabular-nums">{{ cordaje.precio | currency: 'EUR' }}</td>
-                  <td>
-                    <app-stock-control
-                      [stock]="cordaje.stock"
-                      [nombre]="cordaje.modelo"
-                      (cambio)="store.ajustarStock(cordaje, $event)"
-                    />
-                  </td>
-                  <td class="text-right whitespace-nowrap">
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-xs"
-                      [attr.aria-label]="'Editar ' + cordaje.modelo"
-                      (click)="editing.set(cordaje)"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-xs text-error"
-                      [attr.aria-label]="'Borrar ' + cordaje.modelo"
-                      (click)="borrar(cordaje)"
-                    >
-                      Borrar
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6" class="py-6 text-center opacity-60">
-                    Ningún cordaje coincide con los filtros.
-                  </td>
-                </tr>
+                    </td>
+                    <td>
+                      {{ tipoLabel[cordaje.tipo] }}
+                      <div class="text-xs opacity-60">{{ formatoLabel[cordaje.formato] }}</div>
+                    </td>
+                    <td class="text-right tabular-nums">{{ cordaje.calibre | number: '1.2-2' }}</td>
+                    <td class="text-right tabular-nums">{{ cordaje.precio | currency: 'EUR' }}</td>
+                    <td>
+                      <app-stock-control
+                        [stock]="cordaje.stock"
+                        [nombre]="cordaje.modelo"
+                        (cambio)="store.ajustarStock(cordaje, $event)"
+                      />
+                    </td>
+                    <td class="text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs"
+                        [attr.aria-label]="'Editar ' + cordaje.modelo"
+                        (click)="editing.set(cordaje)"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs text-error"
+                        [attr.aria-label]="'Borrar ' + cordaje.modelo"
+                        (click)="borrar(cordaje)"
+                      >
+                        Borrar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="py-6 text-center opacity-60">
+                      Ningún cordaje coincide con los filtros.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (store.loading() && store.cordajes().length === 0) {
+                <tbody app-filas-esqueleto [columnas]="6"></tbody>
               }
-            </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </app-esqueleto>
       }
     }
 

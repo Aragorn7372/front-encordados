@@ -38,7 +38,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "550kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -75,7 +75,8 @@
           "options": {
             "coverageReporters": ["html", "text-summary", "lcovonly", "cobertura"],
             "coverageInclude": ["src/app/**/*.ts"],
-            "coverageExclude": ["src/app/**/*.spec.ts", "src/app/**/*.testing.ts"]
+            "coverageExclude": ["src/app/**/*.spec.ts", "src/app/**/*.testing.ts"],
+            "setupFiles": ["src/test-setup.ts"]
           },
           "configurations": {
             "coverage": {

@@ -9,7 +9,6 @@ import {
   provideRouter,
   withComponentInputBinding,
   withNavigationErrorHandler,
-  withViewTransitions,
 } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -33,7 +32,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
-      withViewTransitions(),
       // Sin red y sin service worker, el código de una pantalla puede no estar descargado
       withNavigationErrorHandler(() =>
         inject(ToastService).error('No se ha podido abrir esa pantalla: hace falta conexión.'),

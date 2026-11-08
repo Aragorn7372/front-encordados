@@ -42,12 +42,13 @@ import { PedidoCreado, PedidosEscrituras } from '../data-access/store/pedidos-es
 import { OutboxService } from '../../../core/offline/outbox.service';
 import { contactosPendientes } from '../../../shared/models/contacto-pendiente';
 import { ContactoRapido } from './contacto-rapido';
+import { Icon } from '../../../shared/ui/icon';
 
 const maquinaGuardada = (tournamentId: string) => `etr_maquina:${tournamentId}`;
 
 @Component({
   selector: 'app-pedido-form',
-  imports: [CurrencyPipe, FormField, FormRoot, FieldError, ContactoRapido],
+  imports: [CurrencyPipe, FormField, FormRoot, FieldError, ContactoRapido, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pedido-form.html',
 })
@@ -147,12 +148,19 @@ export class PedidoForm implements OnInit {
             required(linea.cuerdaV, { message: 'Indica la cuerda' });
             min(linea.tensionV, 5, { message: 'Entre 5 y 40 kg' });
             max(linea.tensionV, 40, { message: 'Entre 5 y 40 kg' });
-            min(linea.tensionH, 5, { message: 'Entre 5 y 40 kg' });
-            max(linea.tensionH, 40, { message: 'Entre 5 y 40 kg' });
             min(linea.preestiradoV, 0, { message: 'Entre 0 y 20 %' });
             max(linea.preestiradoV, 20, { message: 'Entre 0 y 20 %' });
-            min(linea.preestiradoH, 0, { message: 'Entre 0 y 20 %' });
-            max(linea.preestiradoH, 20, { message: 'Entre 0 y 20 %' });
+            // La horizontal solo se valida si es distinta: si no, es la vertical
+            applyWhen(
+              linea,
+              ({ value }) => value().hDistinta,
+              (h) => {
+                min(h.tensionH, 5, { message: 'Entre 5 y 40 kg' });
+                max(h.tensionH, 40, { message: 'Entre 5 y 40 kg' });
+                min(h.preestiradoH, 0, { message: 'Entre 0 y 20 %' });
+                max(h.preestiradoH, 20, { message: 'Entre 0 y 20 %' });
+              },
+            );
             min(linea.nudos, 0, { message: 'No puede ser negativo' });
             max(linea.nudos, 255, { message: 'Demasiados nudos' });
           });
@@ -259,6 +267,46 @@ export class PedidoForm implements OnInit {
     this.model.update((value) => ({
       ...value,
       lineas: [...value.lineas, nuevaLinea(value.lineas.at(-1))],
+    }));
+  }
+
+  /**
+   * Horizontal distinta o igual que la vertical. Al marcarla se empieza desde la vertical: lo
+   * normal es cambiar solo un dato (la tensión, un kilo menos), no escribirlo todo.
+   */
+  protected setHDistinta(index: number, distinta: boolean): void {
+    this.model.update((value) => ({
+      ...value,
+      lineas: value.lineas.map((linea, i) =>
+        i !== index
+          ? linea
+          : distinta
+            ? {
+                ...linea,
+                hDistinta: true,
+                cuerdaH: linea.cuerdaV,
+                tensionH: linea.tensionV,
+                preestiradoH: linea.preestiradoV,
+              }
+            : { ...linea, hDistinta: false },
+      ),
+    }));
+  }
+
+  protected readonly maxUnidades = MAX_UNIDADES;
+
+  /** Los botones − y + de las unidades, entre 1 y MAX_UNIDADES. */
+  protected cambiarCantidad(index: number, delta: number): void {
+    this.model.update((value) => ({
+      ...value,
+      lineas: value.lineas.map((linea, i) =>
+        i === index
+          ? {
+              ...linea,
+              cantidad: Math.min(MAX_UNIDADES, Math.max(1, (linea.cantidad || 1) + delta)),
+            }
+          : linea,
+      ),
     }));
   }
 

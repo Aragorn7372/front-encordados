@@ -16,6 +16,7 @@ import { UsuariosStore } from '../data-access/store/usuarios.store';
 import { BackupPanel } from '../ui/backup-panel';
 import { RolForm } from '../ui/rol-form';
 import { Avatar } from '../../../shared/ui/avatar';
+import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
 
 /**
  * Cuentas y roles. Quien se registra a mano llega «sin rol» y espera a que se le dé uno:
@@ -25,6 +26,8 @@ import { Avatar } from '../../../shared/ui/avatar';
 @Component({
   selector: 'app-usuarios-page',
   imports: [
+    Esqueleto,
+    FilasEsqueleto,
     RequiereConexion,
     SinDatos,
     Avatar,
@@ -77,98 +80,102 @@ import { Avatar } from '../../../shared/ui/avatar';
     @if (store.failed()) {
       <app-sin-datos que="usuarios" />
     } @else {
-      <div class="overflow-x-auto" [attr.aria-busy]="store.loading()">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Email</th>
-              <th>Rol</th>
-              <th><span class="sr-only">Acciones</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (usuario of store.usuarios(); track usuario.id) {
+      <app-esqueleto [cargando]="store.loading()" [hayDatos]="store.usuarios().length > 0">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <!-- data-shimmer-ignore: las cabeceras se ven mientras carga -->
+            <thead data-shimmer-ignore>
               <tr>
-                <td>
-                  <div class="flex items-center gap-3">
-                    <app-avatar [url]="usuario.imagen" [nombre]="usuario.nombre" />
-                    <div>
-                      <div class="font-medium">{{ usuario.nombre }}</div>
-                      @if (usuario.username) {
-                        <div class="text-xs opacity-60">{{ usuario.username }}</div>
-                      }
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th><span class="sr-only">Acciones</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of store.usuarios(); track usuario.id) {
+                <tr>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <app-avatar [url]="usuario.imagen" [nombre]="usuario.nombre" />
+                      <div>
+                        <div class="font-medium">{{ usuario.nombre }}</div>
+                        @if (usuario.username) {
+                          <div class="text-xs opacity-60">{{ usuario.username }}</div>
+                        }
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  @if (usuario.email) {
-                    {{ usuario.email }}
-                  } @else {
-                    <span class="opacity-50">Sin email</span>
-                  }
-                </td>
-                <td>
-                  @if (sinRol(usuario)) {
-                    <span class="badge badge-info badge-soft">Sin rol</span>
-                  } @else if (usuario.rol) {
-                    <span class="badge badge-ghost">{{ rolLabel[usuario.rol] }}</span>
-                  }
-                </td>
-                <td class="text-right whitespace-nowrap">
-                  @if (sinRol(usuario)) {
-                    @if (esAdmin()) {
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs"
-                        [attr.aria-label]="'Dar rol a ' + usuario.nombre"
-                        appRequiereConexion
-                        (click)="dandoRol.set(usuario)"
-                      >
-                        Dar rol
-                      </button>
+                  </td>
+                  <td>
+                    @if (usuario.email) {
+                      {{ usuario.email }}
                     } @else {
+                      <span class="opacity-50">Sin email</span>
+                    }
+                  </td>
+                  <td>
+                    @if (sinRol(usuario)) {
+                      <span class="badge badge-info badge-soft">Sin rol</span>
+                    } @else if (usuario.rol) {
+                      <span class="badge badge-ghost">{{ rolLabel[usuario.rol] }}</span>
+                    }
+                  </td>
+                  <td class="text-right whitespace-nowrap">
+                    @if (sinRol(usuario)) {
+                      @if (esAdmin()) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs"
+                          [attr.aria-label]="'Dar rol a ' + usuario.nombre"
+                          appRequiereConexion
+                          (click)="dandoRol.set(usuario)"
+                        >
+                          Dar rol
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs"
+                          [attr.aria-label]="'Hacer encordador a ' + usuario.nombre"
+                          appRequiereConexion
+                          (click)="hacerEncordador(usuario)"
+                        >
+                          Hacer encordador
+                        </button>
+                      }
+                    }
+                    @if (grupoDe(usuario) === 'jugadores') {
+                      <a routerLink="/jugadores" class="btn btn-ghost btn-xs">Ver en jugadores</a>
+                    }
+                    @if (esAdmin() && usuario.id !== miId()) {
                       <button
                         type="button"
-                        class="btn btn-ghost btn-xs"
-                        [attr.aria-label]="'Hacer encordador a ' + usuario.nombre"
+                        class="btn btn-ghost btn-xs text-error"
+                        [attr.aria-label]="'Borrar a ' + usuario.nombre"
                         appRequiereConexion
-                        (click)="hacerEncordador(usuario)"
+                        (click)="borrar(usuario)"
                       >
-                        Hacer encordador
+                        Borrar
                       </button>
                     }
-                  }
-                  @if (grupoDe(usuario) === 'jugadores') {
-                    <a routerLink="/jugadores" class="btn btn-ghost btn-xs">Ver en jugadores</a>
-                  }
-                  @if (esAdmin() && usuario.id !== miId()) {
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-xs text-error"
-                      [attr.aria-label]="'Borrar a ' + usuario.nombre"
-                      appRequiereConexion
-                      (click)="borrar(usuario)"
-                    >
-                      Borrar
-                    </button>
-                  }
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="4" class="py-6 text-center opacity-60">
-                  @if (store.loading()) {
-                    Cargando…
-                  } @else {
-                    Ningún usuario coincide con los filtros.
-                  }
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              } @empty {
+                @if (!store.loading()) {
+                  <tr>
+                    <td colspan="4" class="py-6 text-center opacity-60">
+                      Ningún usuario coincide con los filtros.
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+            @if (store.loading() && store.usuarios().length === 0) {
+              <tbody app-filas-esqueleto [columnas]="4"></tbody>
             }
-          </tbody>
-        </table>
-      </div>
+          </table>
+        </div>
+      </app-esqueleto>
     }
 
     @if (esAdmin()) {

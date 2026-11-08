@@ -14,7 +14,8 @@ export interface TarjetaMovida {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bg-base-200 rounded-box flex h-full flex-col p-3">
-      <h2 class="mb-3 flex items-center justify-between font-bold">
+      <!-- data-shimmer-ignore: el nombre de la columna se ve mientras carga -->
+      <h2 class="mb-3 flex items-center justify-between font-bold" data-shimmer-ignore>
         {{ label() }}
         <span class="badge" [attr.aria-label]="tarjetas().length + ' raquetas'">
           {{ tarjetas().length }}
@@ -44,7 +45,12 @@ export interface TarjetaMovida {
             (codes)="codigos.emit(tarjeta)"
           />
         } @empty {
-          <p class="py-4 text-center text-sm opacity-50">Sin raquetas</p>
+          @if (cargando()) {
+            <!-- Un solo bloque: tarjetas de ejemplo parecían pedidos de verdad -->
+            <div class="rounded-box h-28 w-full"></div>
+          } @else {
+            <p class="py-4 text-center text-sm opacity-50">Sin raquetas</p>
+          }
         }
       </div>
     </section>
@@ -56,6 +62,8 @@ export class KanbanColumn {
   readonly tarjetas = input.required<Tarjeta[]>();
   readonly readonly = input(false);
   readonly puedeRepetir = input(false);
+  /** Primera carga del tablero: en vez de «Sin raquetas», un bloque para el esqueleto. */
+  readonly cargando = input(false);
   /** Pedidos con cambios en la cola, aún sin llegar al servidor. */
   readonly sinEnviar = input<ReadonlySet<string>>(new Set());
   readonly movida = output<TarjetaMovida>();

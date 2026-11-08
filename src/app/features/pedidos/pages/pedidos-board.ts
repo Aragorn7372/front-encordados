@@ -31,6 +31,7 @@ import { KanbanColumn, TarjetaMovida } from '../ui/kanban-column';
 import { LineaActualizada, PedidoDetalle } from '../ui/pedido-detalle';
 import { PedidoForm } from '../ui/pedido-form';
 import { CodigosPedido } from '../ui/codigos-pedido';
+import { Esqueleto } from '../../../shared/ui/esqueleto';
 import { PedidoFormValue } from '../data-access/model/pedido-form.model';
 import { toFormValue } from '../data-access/mapper/pedido-request';
 import { injectCancelarLinea } from '../ui/cancelar-pedido';
@@ -54,6 +55,7 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
   selector: 'app-pedidos-board',
   imports: [
     Icon,
+    Esqueleto,
     CodigosPedido,
     SinDatos,
     CdkDropListGroup,
@@ -125,27 +127,26 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
       @if (store.failed()) {
         <app-sin-datos que="pedidos" />
       } @else {
-        <div
-          class="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
-          cdkDropListGroup
-          [attr.aria-busy]="store.loading()"
-        >
-          @for (columna of columnas; track columna.id) {
-            <app-kanban-column
-              [columna]="columna.id"
-              [label]="columna.label"
-              [tarjetas]="porColumna()[columna.id]"
-              [readonly]="readonly()"
-              [puedeRepetir]="puedeCrear()"
-              [sinEnviar]="store.sinEnviar()"
-              (movida)="onMoved($event)"
-              (abierta)="abrir($event.pedido.id)"
-              (repetir)="repetir($event.pedido)"
-              (cancelar)="cancelarLinea($event)"
-              (codigos)="codigosDe.set($event)"
-            />
-          }
-        </div>
+        <app-esqueleto [cargando]="cargandoTablero()">
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" cdkDropListGroup>
+            @for (columna of columnas; track columna.id) {
+              <app-kanban-column
+                [columna]="columna.id"
+                [label]="columna.label"
+                [tarjetas]="porColumna()[columna.id]"
+                [readonly]="readonly()"
+                [puedeRepetir]="puedeCrear()"
+                [sinEnviar]="store.sinEnviar()"
+                [cargando]="cargandoTablero()"
+                (movida)="onMoved($event)"
+                (abierta)="abrir($event.pedido.id)"
+                (repetir)="repetir($event.pedido)"
+                (cancelar)="cancelarLinea($event)"
+                (codigos)="codigosDe.set($event)"
+              />
+            }
+          </div>
+        </app-esqueleto>
       }
     }
 
@@ -213,6 +214,10 @@ export default class PedidosBoard {
   /** El pedido se crea en el torneo activo; ADMIN puede ver todo sin elegirlo, pero no crear. */
   protected readonly torneoActivo = computed(() => this.context.selectedId());
   protected readonly creando = signal(false);
+  /** Primera carga: aún no hay ninguna tarjeta que enseñar. */
+  protected readonly cargandoTablero = computed(
+    () => this.store.loading() && Object.values(this.porColumna()).every((l) => l.length === 0),
+  );
   protected readonly formInicial = signal<PedidoFormValue | null>(null);
   /** Repetir crea el pedido en el torneo del original, no en el que esté seleccionado. */
   private readonly torneoRepetido = signal<string | null>(null);

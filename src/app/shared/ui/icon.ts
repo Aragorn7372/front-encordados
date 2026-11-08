@@ -14,9 +14,11 @@ import {
   CircleCheck,
   ClipboardList,
   Menu,
+  Minus,
   Moon,
   Package,
   Pencil,
+  Plus,
   QrCode,
   ScanQrCode,
   Spool,
@@ -57,6 +59,8 @@ const ICONS = {
   hecho: Check,
   aviso: TriangleExclamationPoint,
   volver: ArrowLeft,
+  menos: Minus,
+  mas: Plus,
 } satisfies Record<string, IconNode>;
 
 export type IconName = keyof typeof ICONS;
