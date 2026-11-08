@@ -1,12 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  output,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -18,6 +10,7 @@ import { OutboxService } from '../core/offline/outbox.service';
 import { PrecargaService } from '../core/offline/precarga.service';
 import { PwaService } from '../core/pwa/pwa.service';
 import { AvatarAnimado } from '../core/theme/avatar-animado';
+import { ThemeService } from '../core/theme/theme.service';
 import { ROLE_LABEL } from '../shared/models/roles';
 import { Avatar } from '../shared/ui/avatar';
 import { Icon } from '../shared/ui/icon';
@@ -41,7 +34,7 @@ import { TournamentSwitcher } from './tournament-switcher';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="navbar bg-base-100 border-base-300 sticky top-0 z-30 border-b">
+    <header class="navbar bg-base-100 border-base-300 sticky top-0 z-30 flex-wrap border-b">
       <div class="flex flex-1 items-center gap-2">
         <!-- Con el menú fijo a la vista, la hamburguesa y el nombre ya están en él -->
         @if (!menuVisible()) {
@@ -57,12 +50,15 @@ import { TournamentSwitcher } from './tournament-switcher';
           <!-- mr-2: que el selector de torneos no quede pegado al nombre -->
           <span class="mr-2 flex shrink-0 items-center gap-2">
             <img src="icons/icon.svg" alt="" class="size-7" />
-            <span class="hidden font-bold whitespace-nowrap md:inline">Encuerda tu raqueta</span>
+            <span class="hidden font-bold whitespace-nowrap xl:inline">Encuerda tu raqueta</span>
           </span>
         }
         @if (!ocultarSelector()) {
-          <app-tournament-switcher />
-          <app-precarga-estado />
+          <!-- Desde lg, en la barra. Por debajo no cabe el nombre: va en su propia fila (abajo) -->
+          <div class="hidden items-center gap-2 lg:flex">
+            <app-tournament-switcher />
+            <app-precarga-estado />
+          </div>
         }
       </div>
 
@@ -90,7 +86,8 @@ import { TournamentSwitcher } from './tournament-switcher';
           <app-icon name="escanear" />
         </a>
       }
-      <app-theme-toggle />
+      <!-- En móvil el tema va en el menú de usuario: así cabe el nombre del torneo -->
+      <app-theme-toggle class="hidden sm:inline-flex" />
 
       <div class="dropdown dropdown-end">
         <button type="button" class="btn btn-ghost gap-2" aria-label="Menú de usuario">
@@ -107,19 +104,30 @@ import { TournamentSwitcher } from './tournament-switcher';
           </li>
           <!-- El desplegable sigue abierto mientras tenga el foco: se suelta al navegar -->
           <li><a routerLink="/perfil" (click)="soltarFoco()">Mi perfil</a></li>
-          @if (sinFotoPropia()) {
-            <li>
-              <label class="flex cursor-pointer justify-between" data-testid="avatar-animado">
-                Avatar animado
-                <input
-                  type="checkbox"
-                  class="toggle toggle-sm toggle-primary"
-                  [checked]="animado.activo()"
-                  (change)="animado.toggle()"
-                />
-              </label>
-            </li>
-          }
+          <!-- Siempre a la vista: sirve para reconocer de un vistazo a quien lleva la foto por
+               defecto (y para tener tú un avatar más chulo si no has subido foto) -->
+          <li>
+            <label class="flex cursor-pointer justify-between" data-testid="avatar-animado">
+              Avatar animado
+              <input
+                type="checkbox"
+                class="toggle toggle-sm toggle-primary"
+                [checked]="animado.activo()"
+                (change)="animado.toggle()"
+              />
+            </label>
+          </li>
+          <li class="sm:hidden">
+            <label class="flex cursor-pointer justify-between">
+              Modo oscuro
+              <input
+                type="checkbox"
+                class="toggle toggle-sm"
+                [checked]="tema.theme() === 'black'"
+                (change)="tema.toggle()"
+              />
+            </label>
+          </li>
           <li>
             <label class="flex cursor-pointer justify-between">
               Trabajar sin conexión
@@ -144,6 +152,13 @@ import { TournamentSwitcher } from './tournament-switcher';
           <li><button type="button" (click)="cerrarSesion()">Cerrar sesión</button></li>
         </ul>
       </div>
+      @if (!ocultarSelector()) {
+        <!-- Móvil y tablet: el torneo en una fila propia, a todo el ancho, para que se lea su nombre -->
+        <div class="flex w-full items-center gap-2 px-2 pt-1 pb-1 lg:hidden">
+          <app-tournament-switcher class="min-w-0 flex-1" [completo]="true" />
+          <app-precarga-estado />
+        </div>
+      }
     </header>
   `,
 })
@@ -154,9 +169,7 @@ export class Topbar {
   protected readonly offline = inject(OfflineState);
   protected readonly precarga = inject(PrecargaService);
   protected readonly animado = inject(AvatarAnimado);
-  private readonly avatar = viewChild.required(Avatar);
-  /** El interruptor solo tiene sentido sin foto propia: una foto real se enseña siempre. */
-  protected readonly sinFotoPropia = computed(() => !this.avatar().tieneFoto());
+  protected readonly tema = inject(ThemeService);
   private readonly outbox = inject(OutboxService);
   private readonly confirm = inject(ConfirmService);
   /** El menú fijo está a la vista (pantalla grande). */

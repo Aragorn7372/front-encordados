@@ -38,7 +38,7 @@ interface Informe {
       @if (conImportar() && !simple()) {
         <label
           appRequiereConexion="El Excel necesita conexión"
-          class="btn join-item"
+          class="btn join-item focus-within:outline-primary focus-within:outline-2"
           [class.btn-disabled]="!tournamentId() || importando()"
           [attr.aria-disabled]="!tournamentId() || importando()"
         >
@@ -48,7 +48,7 @@ interface Informe {
           Importar Excel
           <input
             type="file"
-            class="hidden"
+            class="sr-only"
             accept=".xlsx"
             aria-label="Fichero Excel a importar"
             [disabled]="!tournamentId() || importando()"

@@ -28,6 +28,18 @@ describe('FilePicker', () => {
     await fixture.whenStable();
   });
 
+  it('en español: botón propio y el nombre del fichero elegido', async () => {
+    const nombre = () =>
+      element().querySelector('[data-testid="nombre-fichero"]')!.textContent!.trim();
+    expect(element().textContent).toContain('Elegir archivo');
+    expect(nombre()).toBe('Ningún archivo elegido');
+
+    await choose(png('mi-foto.png'));
+
+    expect(nombre()).toBe('mi-foto.png');
+    expect(element().textContent).toContain('Cambiar');
+  });
+
   it('sin imagen no muestra vista previa', () => {
     expect(image()).toBeNull();
   });

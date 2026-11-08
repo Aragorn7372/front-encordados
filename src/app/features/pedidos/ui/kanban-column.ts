@@ -25,15 +25,20 @@ export interface TarjetaMovida {
       <div
         class="flex min-h-24 flex-1 flex-col gap-2"
         cdkDropList
-        [cdkDropListDisabled]="readonly()"
+        [cdkDropListDisabled]="readonly() || !arrastrable()"
         [cdkDropListData]="columna()"
         (cdkDropListDropped)="onDrop($event)"
       >
         @for (tarjeta of tarjetas(); track tarjeta.linea.id) {
+          <!-- En táctil, la tarjeta se coge tras mantener el dedo 400 ms: si no, deslizar sobre
+               ella la arrastraba en vez de hacer scroll (en móvil casi no se podía bajar).
+               select-none: que la pulsación larga no seleccione el texto -->
           <app-linea-card
+            class="select-none"
             cdkDrag
+            [cdkDragStartDelay]="{ touch: 400, mouse: 0 }"
             [cdkDragData]="tarjeta"
-            [cdkDragDisabled]="readonly() || tarjeta.linea.estado === 'CANCELED'"
+            [cdkDragDisabled]="readonly() || !arrastrable() || tarjeta.linea.estado === 'CANCELED'"
             [tarjeta]="tarjeta"
             [readonly]="readonly()"
             [canRepeat]="puedeRepetir()"
@@ -49,7 +54,7 @@ export interface TarjetaMovida {
             <!-- Un solo bloque: tarjetas de ejemplo parecían pedidos de verdad -->
             <div class="rounded-box h-28 w-full"></div>
           } @else {
-            <p class="py-4 text-center text-sm opacity-50">Sin raquetas</p>
+            <p class="py-4 text-center text-sm opacity-70">Sin raquetas</p>
           }
         }
       </div>
@@ -64,6 +69,8 @@ export class KanbanColumn {
   readonly puedeRepetir = input(false);
   /** Primera carga del tablero: en vez de «Sin raquetas», un bloque para el esqueleto. */
   readonly cargando = input(false);
+  /** En el carrusel del móvil no se arrastra: se mueve con los botones o desde el detalle. */
+  readonly arrastrable = input(true);
   /** Pedidos con cambios en la cola, aún sin llegar al servidor. */
   readonly sinEnviar = input<ReadonlySet<string>>(new Set());
   readonly movida = output<TarjetaMovida>();

@@ -133,7 +133,7 @@ function resultado(pedido: Pedido): Resultado | null {
         />
       } @else {
         <app-esqueleto [cargando]="store.loading()" [hayDatos]="filas().length > 0">
-          <div class="bg-base-200 rounded-box overflow-x-auto">
+          <div class="overflow-x-auto">
             <table class="table">
               <!-- data-shimmer-ignore: las cabeceras se ven mientras carga -->
               <thead data-shimmer-ignore>

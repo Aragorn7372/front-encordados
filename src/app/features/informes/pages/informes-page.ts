@@ -229,7 +229,9 @@ export default class InformesPage {
       grid: { borderColor: c['base-300'] },
       legend: { position: 'bottom' },
       dataLabels: { enabled: false },
-      tooltip: { theme: this.tema.oscuro() ? 'dark' : 'light' },
+      // fillSeriesColor: en las circulares, el tooltip se pintaba del color de la porción con
+      // texto blanco: sobre el amarillo no se leía. Así usa el fondo del tema
+      tooltip: { theme: this.tema.oscuro() ? 'dark' : 'light', fillSeriesColor: false },
     };
   });
 

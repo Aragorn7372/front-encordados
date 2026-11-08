@@ -2,12 +2,15 @@ import { CdkDropListGroup } from '@angular/cdk/drag-drop';
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   computed,
   inject,
   input,
   linkedSignal,
   signal,
+  viewChild,
 } from '@angular/core';
+import { mediaQuery } from '../../../shared/utils/media';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthStore } from '../../../core/auth/store/auth.store';
@@ -127,10 +130,40 @@ const porFecha = (a: Tarjeta, b: Tarjeta) =>
       @if (store.failed()) {
         <app-sin-datos que="pedidos" />
       } @else {
+        <!-- Móvil: pestañas para saltar de columna; la actual sigue al carrusel -->
+        <!-- 4 pestañas iguales (nombre arriba, número abajo): así caben siempre, sin su propio scroll -->
+        <nav class="mb-3 grid grid-cols-4 gap-1 md:hidden" aria-label="Columnas del tablero">
+          @for (columna of columnas; track columna.id; let i = $index) {
+            <button
+              type="button"
+              class="btn h-auto min-h-11 flex-col gap-0 px-1 py-1 leading-tight"
+              [class.btn-neutral]="i === columnaVisible()"
+              [class.btn-ghost]="i !== columnaVisible()"
+              [attr.aria-current]="i === columnaVisible() ? 'true' : null"
+              (click)="irAColumna(i)"
+            >
+              <span class="text-xs font-medium">{{ columna.corto }}</span>
+              <span class="text-sm font-bold tabular-nums">{{
+                porColumna()[columna.id].length
+              }}</span>
+            </button>
+          }
+        </nav>
         <app-esqueleto [cargando]="cargandoTablero()">
-          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" cdkDropListGroup>
+          <!-- Móvil: carrusel de columnas. Cada una ocupa el 85 % (se asoma la siguiente) y el
+               scroll-snap obligatorio hace que al soltar siempre encaje una: nunca entre dos.
+               Desde md, la rejilla de siempre -->
+          <div
+            #carrusel
+            class="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-4"
+            cdkDropListGroup
+            (scroll)="onCarrusel()"
+            (scrollend)="encajar()"
+          >
             @for (columna of columnas; track columna.id) {
               <app-kanban-column
+                class="w-[85%] shrink-0 snap-start self-start md:w-auto md:self-stretch"
+                [arrastrable]="!movil()"
                 [columna]="columna.id"
                 [label]="columna.label"
                 [tarjetas]="porColumna()[columna.id]"
@@ -274,6 +307,54 @@ export default class PedidosBoard {
 
   protected readonly heading = this.route.snapshot.title ?? 'Pedidos';
   protected readonly columnas = COLUMNAS;
+  /** Por debajo de md: carrusel de columnas, sin arrastrar. */
+  protected readonly movil = mediaQuery('(max-width: 767.98px)');
+  private readonly carrusel = viewChild<ElementRef<HTMLElement>>('carrusel');
+  /** La columna que se ve en el carrusel (la del borde izquierdo, por el snap-start). */
+  protected readonly columnaVisible = signal(0);
+
+  /** Distancia de cada columna al borde izquierdo del carrusel (con su padding). */
+  private distancias(el: HTMLElement): number[] {
+    const inicio = el.getBoundingClientRect().left + parseFloat(getComputedStyle(el).paddingLeft);
+    return [...el.children].map((hijo) => hijo.getBoundingClientRect().left - inicio);
+  }
+
+  private esperaEncaje?: ReturnType<typeof setTimeout>;
+
+  protected onCarrusel(): void {
+    const el = this.carrusel()?.nativeElement;
+    if (!el) return;
+    const distancias = this.distancias(el).map(Math.abs);
+    this.columnaVisible.set(distancias.indexOf(Math.min(...distancias)));
+    // Por si no llega scrollend (Safari en iPhone no lo tiene): 150 ms quieto = terminó
+    clearTimeout(this.esperaEncaje);
+    this.esperaEncaje = setTimeout(() => this.encajar(), 150);
+  }
+
+  /**
+   * Red de seguridad del scroll-snap: si al terminar el scroll el carrusel ha quedado entre dos
+   * columnas (algún navegador no encaja tras ciertos gestos), se coloca en la más cercana.
+   * La última no puede llegar al borde (no hay más que deslizar): basta con el final.
+   */
+  protected encajar(): void {
+    const el = this.carrusel()?.nativeElement;
+    if (!el || !this.movil()) return;
+    clearTimeout(this.esperaEncaje);
+    const cercanas = this.distancias(el).map(Math.abs);
+    this.columnaVisible.set(cercanas.indexOf(Math.min(...cercanas)));
+    const destino = this.distancias(el)[this.columnaVisible()];
+    const alFinal = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+    if (Math.abs(destino) > 2 && !alFinal) el.scrollBy({ left: destino, behavior: 'smooth' });
+  }
+
+  protected irAColumna(indice: number): void {
+    const el = this.carrusel()?.nativeElement;
+    if (!el) return;
+    // Solo en horizontal: scrollIntoView movía también la página hacia abajo
+    const suave = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollBy({ left: this.distancias(el)[indice], behavior: suave ? 'smooth' : 'auto' });
+    this.columnaVisible.set(indice);
+  }
   protected readonly jugadorPuedeCancelar = JUGADOR_PUEDE_CANCELAR;
   protected readonly limite = TABLERO_MAX;
   protected readonly pagos = Object.entries(PAYMENT_STATUS).map(([value, info]) => ({

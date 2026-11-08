@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { PrecargaService } from '../core/offline/precarga.service';
 import { TournamentContext } from '../core/tournament-context/tournament-context';
 
@@ -8,7 +8,8 @@ import { TournamentContext } from '../core/tournament-context/tournament-context
   template: `
     @if (context.tournaments().length > 1) {
       <select
-        class="select select-sm max-w-56"
+        class="select select-sm"
+        [class]="completo() ? 'w-full max-w-none' : 'max-w-72'"
         aria-label="Torneo activo"
         (change)="onChange($event)"
       >
@@ -20,11 +21,15 @@ import { TournamentContext } from '../core/tournament-context/tournament-context
         }
       </select>
     } @else if (context.selected(); as tournament) {
-      <span class="max-w-56 truncate text-sm font-medium">{{ tournament.name }}</span>
+      <span class="truncate text-sm font-medium" [class.max-w-72]="!completo()">
+        {{ tournament.name }}
+      </span>
     }
   `,
 })
 export class TournamentSwitcher {
+  /** Ocupa todo el ancho (la fila propia del móvil). */
+  readonly completo = input(false);
   protected readonly context = inject(TournamentContext);
   /** Los torneos guardados llevan ✓: se pueden abrir sin conexión. */
   protected readonly precarga = inject(PrecargaService);

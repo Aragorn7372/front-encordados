@@ -36,7 +36,7 @@ import { PerfilActual, PerfilFormValue } from '../data-access/model/perfil.model
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="form">
-      <div class="grid gap-x-6 md:grid-cols-[auto_1fr]">
+      <div class="grid grid-cols-1 gap-x-6 md:grid-cols-[auto_1fr]">
         <fieldset class="fieldset">
           <span class="fieldset-legend">Foto</span>
           <app-file-picker
@@ -48,7 +48,7 @@ import { PerfilActual, PerfilFormValue } from '../data-access/model/perfil.model
           />
         </fieldset>
 
-        <div class="grid gap-x-4 sm:grid-cols-2">
+        <div class="grid min-w-0 gap-x-4 sm:grid-cols-2">
           <fieldset class="fieldset">
             <label class="fieldset-legend" for="perfil-nombre">Nombre</label>
             <input id="perfil-nombre" class="input w-full" [formField]="form.nombre" />

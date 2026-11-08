@@ -3,11 +3,12 @@ import { PedidoUsuarioDto } from '../dto/pedido.dto';
 
 export type Columna = 'pendiente' | 'proceso' | 'listo' | 'cerrado';
 
-export const COLUMNAS: { id: Columna; label: string }[] = [
-  { id: 'pendiente', label: 'Pendiente' },
-  { id: 'proceso', label: 'En proceso' },
-  { id: 'listo', label: 'Listo' },
-  { id: 'cerrado', label: 'Entregado o cancelado' },
+/** `corto`: para las pestañas del carrusel en móvil, donde no cabe la etiqueta entera. */
+export const COLUMNAS: { id: Columna; label: string; corto: string }[] = [
+  { id: 'pendiente', label: 'Pendiente', corto: 'Pendiente' },
+  { id: 'proceso', label: 'En proceso', corto: 'En proceso' },
+  { id: 'listo', label: 'Listo', corto: 'Listo' },
+  { id: 'cerrado', label: 'Entregado o cancelado', corto: 'Cerrados' },
 ];
 
 export interface Cordaje {

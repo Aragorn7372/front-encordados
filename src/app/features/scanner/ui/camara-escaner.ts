@@ -57,14 +57,17 @@ const MAX_FALLOS = 20;
     }
 
     <div class="mt-3 flex flex-wrap items-center gap-2">
-      <label class="btn btn-sm" [class.btn-disabled]="leyendoFoto()">
+      <label
+        class="btn btn-sm focus-within:outline-primary focus-within:outline-2"
+        [class.btn-disabled]="leyendoFoto()"
+      >
         @if (leyendoFoto()) {
           <span class="loading loading-spinner loading-xs"></span>
         }
         Leer desde una foto
         <input
           type="file"
-          class="hidden"
+          class="sr-only"
           accept="image/*"
           capture="environment"
           aria-label="Foto del código"

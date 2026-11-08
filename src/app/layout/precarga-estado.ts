@@ -16,7 +16,7 @@ import { Icon } from '../shared/ui/icon';
         @case ('guardando') {
           <span class="text-base-content/70 flex items-center gap-1 text-xs" role="status">
             <span class="loading loading-spinner loading-xs"></span>
-            <span class="hidden sm:inline">Guardando para sin conexión</span>
+            <span class="hidden xl:inline">Guardando para sin conexión</span>
             {{ e.hechas }}/{{ e.total }}
           </span>
         }
@@ -32,7 +32,7 @@ import { Icon } from '../shared/ui/icon';
             "
             (click)="precarga.actualizar()"
           >
-            <app-icon name="hecho" /> <span class="hidden sm:inline">Disponible sin conexión</span>
+            <app-icon name="hecho" /> <span class="hidden xl:inline">Disponible sin conexión</span>
           </button>
         }
         @case ('incompleta') {
@@ -49,7 +49,7 @@ import { Icon } from '../shared/ui/icon';
             "
             (click)="precarga.actualizar()"
           >
-            <app-icon name="aviso" /> <span class="hidden sm:inline">Copia incompleta</span>
+            <app-icon name="aviso" /> <span class="hidden xl:inline">Copia incompleta</span>
           </button>
         }
       }

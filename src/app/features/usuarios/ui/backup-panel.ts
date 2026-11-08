@@ -42,14 +42,18 @@ export const PALABRA_RESTAURAR = 'RESTAURAR';
             }
             Descargar copia
           </button>
-          <label appRequiereConexion class="btn" [class.btn-disabled]="leyendo()">
+          <label
+            appRequiereConexion
+            class="btn focus-within:outline-primary focus-within:outline-2"
+            [class.btn-disabled]="leyendo()"
+          >
             @if (leyendo()) {
               <span class="loading loading-spinner loading-xs"></span>
             }
             Restaurar una copia…
             <input
               type="file"
-              class="hidden"
+              class="sr-only"
               accept=".zip"
               aria-label="Copia de seguridad a restaurar"
               (change)="elegir($event)"

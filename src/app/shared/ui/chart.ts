@@ -22,7 +22,8 @@ import type { ApexOptions } from 'apexcharts';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
-    <div #lienzo [attr.aria-label]="etiqueta()" role="img"></div>
+    <!-- figure y no img: la leyenda de la gráfica se puede pulsar, y un img no admite nada pulsable -->
+    <div #lienzo [attr.aria-label]="etiqueta()" role="figure"></div>
     @if (!listo()) {
       <div class="skeleton h-64 w-full"></div>
     }

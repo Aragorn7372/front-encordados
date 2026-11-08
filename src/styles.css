@@ -28,14 +28,16 @@
   --color-accent-content: oklch(100% 0 0);
   --color-neutral: oklch(0% 0 0);
   --color-neutral-content: oklch(100% 0 0);
-  --color-info: oklch(60% 0.126 221.723);
+  /* info, success y error más oscuros que los originales: como color de texto (avisos «soft»,
+     botones «Borrar», errores de los campos) no llegaban a 4,5:1 sobre blanco y base-200. */
+  --color-info: oklch(52% 0.12 230);
   --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(62% 0.194 149.214);
+  --color-success: oklch(52% 0.15 150);
   --color-success-content: oklch(100% 0 0);
   --color-warning: oklch(85% 0.199 91.936);
   --color-warning-content: oklch(0% 0 0);
-  --color-error: oklch(70% 0.191 22.216);
-  --color-error-content: oklch(0% 0 0);
+  --color-error: oklch(54% 0.2 25);
+  --color-error-content: oklch(100% 0 0);
   --radius-selector: 2rem;
   --radius-field: 0.5rem;
   --radius-box: 1rem;
@@ -62,11 +64,14 @@
   --color-accent-content: oklch(100% 0 0);
   --color-neutral: oklch(35% 0 0);
   --color-neutral-content: oklch(100% 0 0);
-  --color-info: oklch(45.201% 0.313 264.052);
-  --color-info-content: oklch(89.04% 0.062 264.052);
-  --color-success: oklch(51.975% 0.176 142.495);
-  --color-success-content: oklch(90.395% 0.035 142.495);
-  --color-warning: oklch(96.798% 0.211 109.769);
+  /* info y success más claros que los originales del tema: sobre negro, los avisos «soft»
+     (texto del color) no se leían. Rellenos llevan texto oscuro. */
+  --color-info: oklch(72% 0.15 250);
+  --color-info-content: oklch(20% 0.05 250);
+  --color-success: oklch(70% 0.17 145);
+  --color-success-content: oklch(20% 0.05 145);
+  /* Ámbar en vez del amarillo fosforito original (97 %): en gráficas y badges deslumbraba */
+  --color-warning: oklch(84% 0.16 85);
   --color-warning-content: oklch(19.359% 0.042 109.769);
   --color-error: oklch(62.795% 0.257 29.233);
   --color-error-content: oklch(12.559% 0.051 29.233);
@@ -124,4 +129,16 @@
 .sin-flechas::-webkit-outer-spin-button {
   appearance: none;
   margin: 0;
+}
+
+/* La clase label de daisyUI no parte el texto (white-space: nowrap): en móvil, una ayuda o un
+   error largo ensanchaba el formulario y salía scroll horizontal (Perfil). */
+p.label {
+  white-space: normal;
+}
+
+/* Tema claro: el amarillo de warning vale de relleno, pero como color de texto no se lee
+   (1,3:1 sobre blanco). Cuando es texto, un ámbar oscuro. */
+[data-theme='corporate'] :is(.text-warning, .alert-soft.alert-warning, .badge-soft.badge-warning) {
+  color: oklch(50% 0.12 70);
 }

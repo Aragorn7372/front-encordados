@@ -48,7 +48,12 @@ export function tonoPedido(id: string): number {
         <div class="flex items-start justify-between gap-2">
           <h3 class="card-title min-w-0 text-sm">
             <app-avatar size="xs" [url]="tarjeta().pedido.jugador.imageUrl" [nombre]="nombre()" />
-            <button type="button" class="link-hover truncate text-left" (click)="opened.emit()">
+            <!-- min-h-6: 24 px, para tocarlo bien con el dedo -->
+            <button
+              type="button"
+              class="link-hover min-h-6 truncate text-left"
+              (click)="opened.emit()"
+            >
               {{ nombre() }}
             </button>
           </h3>
