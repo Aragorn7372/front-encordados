@@ -15,8 +15,8 @@ const dto = (overrides: Partial<UsuarioDto> = {}): UsuarioDto => ({
 
 describe('usuario.mapper', () => {
   it.each<[Partial<UsuarioDto>, string]>([
-    [{ role: 'ENCORDER' }, 'staff'],
-    [{ role: 'SUPERVISOR' }, 'staff'],
+    [{ role: 'ENCORDER' }, 'encordadores'],
+    [{ role: 'SUPERVISOR' }, 'supervisores'],
     [{ role: 'OWNER' }, 'propietarios'],
     [{ role: 'ADMIN' }, 'propietarios'],
     [{ role: 'USER', tournamentId: null }, 'sin-rol'],
@@ -40,10 +40,20 @@ describe('usuario.mapper', () => {
     expect([contacto.username, contacto.email]).toEqual([null, null]);
   });
 
-  it('el OWNER solo ve su equipo y las cuentas sin rol; el ADMIN, todo', () => {
-    expect(gruposVisibles('OWNER')).toEqual(['sin-rol', 'staff']);
-    expect(gruposVisibles('ADMIN')).toContain('propietarios');
-    expect(gruposVisibles('ADMIN')).toContain('jugadores');
+  it('el OWNER ve encordadores, supervisores, jugadores y sin rol; el ADMIN, también propietarios', () => {
+    expect(gruposVisibles('OWNER')).toEqual([
+      'encordadores',
+      'supervisores',
+      'jugadores',
+      'sin-rol',
+    ]);
+    expect(gruposVisibles('ADMIN')).toEqual([
+      'encordadores',
+      'supervisores',
+      'jugadores',
+      'sin-rol',
+      'propietarios',
+    ]);
   });
 
   it('busca por nombre, usuario o email', () => {

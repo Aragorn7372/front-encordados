@@ -11,7 +11,8 @@ const USERS = '/api/user';
 const BACKUP = '/api/export';
 
 /** Todos de una vez y búsqueda en el cliente (ENCUERDATU-66). */
-export const USUARIOS_MAX = 200;
+/** Se cargan de una vez (la tabla las enseña de 20 en 20): el límite solo avisa si hay más. */
+export const USUARIOS_MAX = 1000;
 
 const silent = () => ({ context: new HttpContext().set(SILENT_ERRORS, true) });
 /** El backend espera un string JSON suelto en el cuerpo. */

@@ -20,8 +20,9 @@ export function toUsuario(dto: UsuarioDto): Usuario {
 export function grupoDe(usuario: Usuario): Grupo {
   switch (usuario.rol) {
     case 'ENCORDER':
+      return 'encordadores';
     case 'SUPERVISOR':
-      return 'staff';
+      return 'supervisores';
     case 'OWNER':
     case 'ADMIN':
       return 'propietarios';
@@ -34,11 +35,14 @@ export function grupoDe(usuario: Usuario): Grupo {
 export const esSinRol = (usuario: Usuario) => grupoDe(usuario) === 'sin-rol';
 
 /**
- * Lo que ve cada rol. El OWNER, su gente y las cuentas que puede convertir en encordador.
- * Se filtra aquí porque el backend le manda todo (ENCUERDATU-72).
+ * Las pestañas de cada rol. El OWNER ve encordadores, supervisores, jugadores y cuentas sin rol:
+ * así encuentra a quien ya trabajó en otro taller (sustituciones) sin pedirle una cuenta nueva.
+ * Propietarios y administradores, solo el ADMIN. Se filtra aquí porque el backend le manda todo
+ * (ENCUERDATU-72, -88).
  */
 export function gruposVisibles(rol: Role | null | undefined): Grupo[] {
-  return rol === 'ADMIN' ? ['sin-rol', 'staff', 'propietarios', 'jugadores'] : ['sin-rol', 'staff'];
+  const comunes: Grupo[] = ['encordadores', 'supervisores', 'jugadores', 'sin-rol'];
+  return rol === 'ADMIN' ? [...comunes, 'propietarios'] : comunes;
 }
 
 export function coincideUsuario(usuario: Usuario, busqueda: string): boolean {

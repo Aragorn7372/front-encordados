@@ -65,15 +65,32 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ng test
 ```
 
-## Running end-to-end tests
+## Tests end-to-end (Playwright)
 
-For end-to-end (e2e) testing, run:
+Están en `e2e/` y prueban la app de verdad contra un backend real, con **2 workers en
+paralelo**: escritorio y móvil (Pixel 7), acceso y permisos por rol, el tablero (botones,
+detalle, formulario, tiempo real y trabajo sin conexión sin duplicados) y accesibilidad con
+axe (WCAG 2 A/AA) en todas las pantallas y en los dos temas.
 
 ```bash
-ng e2e
+npm run build          # los e2e sirven el build actual
+npm run e2e            # contra el backend de E2E_API (por defecto https://localhost, el docker-compose)
+npm run e2e:informe    # el informe HTML de la última ejecución
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `E2E_API` | `https://localhost` | Backend al que `e2e/servidor.mjs` reenvía `/api` y `/hub` (también el WebSocket). |
+| `E2E_BASE_URL` | *(vacía)* | Si se pone, se prueba esa URL tal cual y no se levanta el servidor (por ejemplo, todo el docker-compose en el CI). |
+| `CI` | *(vacía)* | En el CI: un reintento por test y prohibido dejar un `test.only`. |
+
+Cada ejecución crea su propio torneo (con `carlos_encordador` de encordador y `supervisor_luis`
+de supervisor), hace ahí todos los pedidos y jugadores, con nombres únicos para que los dos
+workers no se pisen, y borra el torneo al terminar, aunque algo falle. El resto (jugadores,
+cuentas de prueba, pedidos) no se borra: los e2e corren contra bases de datos temporales.
+Necesita los usuarios del seed del backend (`e2e/soporte/usuarios.ts`).
+
+Primera vez en una máquina nueva: `npx playwright install chromium`.
 
 ## Additional Resources
 

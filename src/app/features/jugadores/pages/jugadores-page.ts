@@ -155,7 +155,7 @@ const TITULOS: Record<Accion['tipo'], string> = {
                       @if (jugador.email) {
                         {{ jugador.email }}
                       } @else {
-                        <span class="opacity-50">Sin email</span>
+                        <span class="opacity-70">Sin email</span>
                       }
                     </td>
                     <td class="text-right tabular-nums">{{ jugador.bonos | currency: 'EUR' }}</td>

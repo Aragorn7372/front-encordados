@@ -50,7 +50,8 @@ const PANTALLA_GRANDE = '(min-width: 1024px)';
       </div>
 
       <div class="drawer-side z-40">
-        <label for="nav-drawer" class="drawer-overlay" aria-label="Cerrar menú"></label>
+        <!-- Capa para cerrar pulsando fuera (atajo de ratón): el cierre accesible es la X -->
+        <label for="nav-drawer" class="drawer-overlay" aria-hidden="true"></label>
         <nav class="bg-base-200 min-h-full w-72 p-4">
           <div class="mb-4 flex items-center gap-2 px-2">
             <img src="icons/icon.svg" alt="" class="size-8 shrink-0" />

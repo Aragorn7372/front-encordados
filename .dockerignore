@@ -11,3 +11,4 @@ coverage
 .idea
 plan.md
 *.log
+e2e

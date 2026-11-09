@@ -12,16 +12,18 @@ export interface Usuario {
 }
 
 /**
- * Cómo se agrupan en pantalla. «Sin rol» = se registró a mano y espera que le den uno.
- * «Jugadores» = contactos de un torneo: se gestionan en /jugadores.
+ * Las pestañas de la pantalla: siempre se mira un tipo, y la búsqueda y las páginas van dentro.
+ * «Sin rol» = se registró a mano y espera que le den uno. «Jugadores» = cuentas de jugador de un
+ * torneo (se gestionan en /jugadores).
  */
-export type Grupo = 'sin-rol' | 'staff' | 'propietarios' | 'jugadores';
+export type Grupo = 'encordadores' | 'supervisores' | 'jugadores' | 'sin-rol' | 'propietarios';
 
 export const GRUPO_LABEL: Record<Grupo, string> = {
+  encordadores: 'Encordadores',
+  supervisores: 'Supervisores',
+  jugadores: 'Jugadores',
   'sin-rol': 'Sin rol',
-  staff: 'Encordadores y supervisores',
-  propietarios: 'Propietarios y administradores',
-  jugadores: 'Jugadores de torneos',
+  propietarios: 'Propietarios',
 };
 
 /** Los roles que el ADMIN puede dar a una cuenta sin rol. */

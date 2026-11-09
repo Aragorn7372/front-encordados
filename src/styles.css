@@ -102,6 +102,12 @@
   }
 }
 
+/* Los avisos fijos de abajo (sin conexión, versión nueva) publican su alto en --alto-avisos:
+   la página deja ese hueco al final para que nada quede tapado debajo de ellos. */
+.contenido {
+  padding-bottom: calc(var(--alto-avisos, 0px) + 1.5rem);
+}
+
 /* Cambio de página: la página nueva entra con un fundido corto. Sin View Transitions: hacían una
    "foto" de la página vieja y otra de la nueva, y entre páginas de distinta altura (Perfil) el
    navegador estiraba el bloque de una a otra y quedaba raro. El componente de la ruta se inserta

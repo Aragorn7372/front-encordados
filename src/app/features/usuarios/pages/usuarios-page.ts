@@ -8,10 +8,11 @@ import { ROLE_LABEL } from '../../../shared/models/roles';
 import { SinDatos } from '../../../core/offline/sin-datos';
 import { Modal } from '../../../shared/ui/modal';
 import { PageHeader } from '../../../shared/ui/page-header';
+import { Paginator } from '../../../shared/ui/paginator';
 import { SearchInput } from '../../../shared/ui/search-input';
 import { USUARIOS_MAX } from '../data-access/api/usuarios.api';
 import { esSinRol, grupoDe } from '../data-access/mapper/usuario.mapper';
-import { GRUPO_LABEL, Grupo, Usuario } from '../data-access/model/usuario.model';
+import { GRUPO_LABEL, Usuario } from '../data-access/model/usuario.model';
 import { UsuariosStore } from '../data-access/store/usuarios.store';
 import { BackupPanel } from '../ui/backup-panel';
 import { RolForm } from '../ui/rol-form';
@@ -34,6 +35,7 @@ import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
     BackupPanel,
     Modal,
     PageHeader,
+    Paginator,
     RolForm,
     RouterLink,
     SearchInput,
@@ -53,21 +55,35 @@ import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
       </div>
     }
 
+    <!-- Siempre un tipo a la vista: la búsqueda y las páginas van dentro de la pestaña.
+         text-base-content: daisyUI atenúa las inactivas y no llegaban al contraste mínimo -->
+    <div
+      role="tablist"
+      class="tabs tabs-box mb-4 w-fit max-w-full overflow-x-auto"
+      aria-label="Tipo de usuario"
+    >
+      @for (grupo of store.grupos(); track grupo) {
+        <button
+          type="button"
+          role="tab"
+          class="tab text-base-content gap-2 whitespace-nowrap"
+          [class.tab-active]="store.grupo() === grupo"
+          [attr.aria-selected]="store.grupo() === grupo"
+          (click)="store.grupo.set(grupo)"
+        >
+          {{ grupoLabel[grupo] }}
+          <span class="badge badge-sm">{{ store.porGrupo()[grupo] }}</span>
+        </button>
+      }
+    </div>
+
     <div class="mb-4 flex flex-wrap items-center gap-2">
       <div class="w-full max-w-sm">
         <app-search-input
-          placeholder="Buscar por nombre, usuario o email…"
+          [placeholder]="'Buscar en ' + grupoLabel[store.grupo()].toLowerCase() + '…'"
           (searched)="store.busqueda.set($event)"
         />
       </div>
-      <select class="select w-auto" aria-label="Filtrar por grupo" (change)="onGrupo($event)">
-        <option value="" [selected]="!store.grupo()">Todos</option>
-        @for (grupo of store.grupos(); track grupo) {
-          <option [value]="grupo" [selected]="store.grupo() === grupo">
-            {{ grupoLabel[grupo] }}
-          </option>
-        }
-      </select>
       <a routerLink="/torneos" class="btn btn-ghost">Asignar a un torneo</a>
     </div>
 
@@ -93,7 +109,7 @@ import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
               </tr>
             </thead>
             <tbody>
-              @for (usuario of store.usuarios(); track usuario.id) {
+              @for (usuario of store.visibles(); track usuario.id) {
                 <tr>
                   <td>
                     <div class="flex items-center gap-3">
@@ -110,7 +126,7 @@ import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
                     @if (usuario.email) {
                       {{ usuario.email }}
                     } @else {
-                      <span class="opacity-50">Sin email</span>
+                      <span class="opacity-70">Sin email</span>
                     }
                   </td>
                   <td>
@@ -176,6 +192,11 @@ import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
           </table>
         </div>
       </app-esqueleto>
+      <app-paginator
+        [page]="paginaVisible()"
+        [totalPages]="store.paginas()"
+        (pageChange)="store.pagina.set($event)"
+      />
     }
 
     @if (esAdmin()) {
@@ -195,6 +216,10 @@ import { Esqueleto, FilasEsqueleto } from '../../../shared/ui/esqueleto';
 })
 export default class UsuariosPage {
   protected readonly store = inject(UsuariosStore);
+  /** La que se ve de verdad (si se borra lo último de la última página, la anterior). */
+  protected readonly paginaVisible = computed(() =>
+    Math.min(this.store.pagina(), this.store.paginas() - 1),
+  );
   private readonly auth = inject(AuthStore);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
@@ -208,10 +233,6 @@ export default class UsuariosPage {
   protected readonly esAdmin = computed(() => this.auth.hasRole('ADMIN'));
   /** Nadie se borra a sí mismo desde aquí. */
   protected readonly miId = computed(() => this.auth.userId());
-
-  protected onGrupo(event: Event): void {
-    this.store.grupo.set((event.target as HTMLSelectElement).value as Grupo | '');
-  }
 
   protected onRol(usuario: Usuario, rol: keyof typeof ROLE_LABEL): void {
     this.dandoRol.set(null);
