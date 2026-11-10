@@ -67,8 +67,8 @@ export class MaterialesStore {
   }
 
   /**
-   * Optimista: el número cambia al momento y vuelve si el servidor falla. Se envía el material
-   * entero, no solo el stock: sin precio el backend lo pondría a 0 (ENCUERDATU-69). Sin conexión queda
+   * Optimista: el número cambia al momento y vuelve si el servidor falla. Se envía el stock y no
+   * el precio: el backend ya no lo pone a 0 si falta (ENCUERDATU-69). Sin conexión queda
    * en la cola y desde ahí se sigue viendo.
    */
   async ajustarStock(material: Material, delta: number): Promise<void> {

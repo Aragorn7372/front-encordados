@@ -12,7 +12,7 @@ export const materialesManejadores: ManejadorOutbox[] = [
   definirManejador<MaterialesApi, EditarMaterial, Material>({
     tipo: OP_MATERIAL.editar,
     api: MaterialesApi,
-    enviar: (api, { id, value }) => api.update(id, value),
+    enviar: (api, { id, value, soloStock }) => api.update(id, value, soloStock),
     idempotente: true,
   }),
   definirManejador<MaterialesApi, BorrarMaterial, unknown>({

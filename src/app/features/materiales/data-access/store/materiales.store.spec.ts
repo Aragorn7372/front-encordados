@@ -67,7 +67,7 @@ describe('MaterialesStore', () => {
     expect(store.materiales().map((m) => m.id)).toEqual([2]);
   });
 
-  it('± stock cambia al momento y envía el material entero', async () => {
+  it('± stock cambia al momento y envía el stock sin el precio', async () => {
     const store = await setup();
 
     const ajuste = store.ajustarStock(store.todos()[0], 1);
@@ -76,7 +76,8 @@ describe('MaterialesStore', () => {
 
     expect(api.update).toHaveBeenCalledWith(
       1,
-      expect.objectContaining({ stock: 11, precio: 3.99, marca: 'Babolat', tipo: 'Overgrip' }),
+      expect.objectContaining({ stock: 11, marca: 'Babolat', tipo: 'Overgrip' }),
+      true, // soloStock: el precio no se envía
     );
     // Se queda con lo que devuelve el servidor
     expect(store.todos()[0].precio).toBe(4.5);

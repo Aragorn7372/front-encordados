@@ -23,9 +23,9 @@ export class MaterialesEscrituras {
     return resultado.enviada ? resultado.respuesta : null;
   }
 
-  /** El ± de stock: el material entero con el stock nuevo. Un error sale en un toast. */
+  /** El ± de stock: solo el stock nuevo, sin el precio. Un error sale en un toast. */
   async ajustarStock(actual: Material, value: MaterialFormValue): Promise<Material | null> {
-    const payload: EditarMaterial = { id: actual.id, value };
+    const payload: EditarMaterial = { id: actual.id, value, soloStock: true };
     const resultado = await this.outbox.ejecutar<Material>(
       OP_MATERIAL.editar,
       payload,

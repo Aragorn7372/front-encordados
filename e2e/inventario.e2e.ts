@@ -50,6 +50,11 @@ for (const caso of [
         await page.getByRole('button', { name: `Quitar uno de ${modelo}` }).click();
         await expect(suya.getByText('3', { exact: true })).toBeVisible();
 
+        // El ± no envía el precio y el servidor lo conserva (ENCUERDATU-69): tras recargar sigue en 15,50
+        await page.reload();
+        await expect(suya).toContainText(/15,50\s€/);
+        await expect(suya.getByText('3', { exact: true })).toBeVisible();
+
         await page.getByRole('button', { name: `Editar ${modelo}` }).click();
         await dialogo(page).locator(`#${caso.campo}-precio`).fill('20');
         await dialogo(page).getByRole('button', { name: 'Guardar cambios' }).click();

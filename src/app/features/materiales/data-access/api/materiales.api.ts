@@ -44,9 +44,9 @@ export class MaterialesApi {
    * Silencioso: lo envía la cola (ver MaterialesEscrituras), que avisa ella del error. El
    * formulario lo pinta en línea y el ± de stock, en un toast.
    */
-  update(id: number, value: MaterialFormValue) {
+  update(id: number, value: MaterialFormValue, soloStock = false) {
     return this.http
-      .put<MaterialDto>(`${BASE}/${id}`, toMaterialFormData(value), silent())
+      .put<MaterialDto>(`${BASE}/${id}`, toMaterialFormData(value, undefined, soloStock), silent())
       .pipe(map(toMaterial));
   }
 

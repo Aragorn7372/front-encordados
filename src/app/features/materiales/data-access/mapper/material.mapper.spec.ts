@@ -33,7 +33,18 @@ describe('material.mapper', () => {
     expect(coincideMaterial(plomo, 'plomo')).toBe(true);
   });
 
-  it('la petición lo llama Type, y siempre lleva precio y stock (ENCUERDATU-69)', () => {
+  it('el ± de stock envía el stock pero no el precio (ENCUERDATU-69)', () => {
+    const form = toMaterialFormData({ ...toMaterialFormValue(overgrip), stock: 0 }, undefined, true);
+
+    expect(form.get('Stock')).toBe('0');
+    expect(form.has('Precio')).toBe(false);
+    // Marca, Modelo y Type siguen yendo: el backend los exige también al editar
+    expect(form.get('Marca')).toBe(overgrip.marca);
+    expect(form.get('Modelo')).toBe(overgrip.modelo);
+    expect(form.get('Type')).toBe('Overgrip');
+  });
+
+  it('la petición lo llama Type, y una edición normal lleva precio y stock', () => {
     const form = toMaterialFormData({ ...toMaterialFormValue(overgrip), stock: 0 });
 
     expect(form.get('Type')).toBe('Overgrip');

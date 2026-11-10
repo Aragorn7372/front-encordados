@@ -25,16 +25,22 @@ export function toMaterialFormValue(material: Material): MaterialFormValue {
 }
 
 /**
- * Multipart de MaterialRequestDto / MaterialPatchDto. Siempre todos los campos: si una edición
- * no envía precio o stock, el backend los deja a 0 (ENCUERDATU-69).
+ * Multipart de MaterialRequestDto / MaterialPatchDto. Marca, Modelo y Type van siempre (el backend
+ * los exige también al editar). Stock y precio, también, salvo en el ± de stock (`soloStock`): ahí
+ * va solo el stock y el precio no se envía, así el backend lo deja como esté (ENCUERDATU-69) y no
+ * se pisa un precio cambiado por otra persona entre tanto.
  */
-export function toMaterialFormData(value: MaterialFormValue, tournamentId?: string): FormData {
+export function toMaterialFormData(
+  value: MaterialFormValue,
+  tournamentId?: string,
+  soloStock = false,
+): FormData {
   return toFormData({
     TournamentId: tournamentId,
     Marca: value.marca.trim(),
     Modelo: value.modelo.trim(),
     Stock: value.stock,
-    Precio: value.precio,
+    Precio: soloStock ? undefined : value.precio,
     Type: value.tipo,
     Imagen: value.imagen,
   });
