@@ -95,3 +95,7 @@ Primera vez en una máquina nueva: `npx playwright install chromium`.
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Licencia
+
+Este proyecto se distribuye bajo la [PolyForm Noncommercial License 1.0.0](LICENSE): se puede ver, estudiar y modificar para fines **no comerciales**. Cualquier uso comercial requiere el permiso de la autora o el autor.
